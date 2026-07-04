@@ -70,7 +70,7 @@ function writeForm() {
 }
 
 function paramsOf(s) {
-  return { ...s.inputs, ...s.advanced };
+  return { ...s.inputs, ...s.advanced, events: s.events };
 }
 
 function syncSliders() {
@@ -126,6 +126,98 @@ function renderAdvancedSummary() {
   $('defaultsNote').hidden = !isDefault;
 }
 
+// --- ライフイベント（§4.2）---
+// 行の再描画は追加/削除時のみ（入力中のフォーカスを守る）。並び替えもしない。
+// ラベルはユーザー入力文字列のため createElement + value のみで扱う（innerHTML禁止）。
+
+// よく使うイベントのプリセット（金額は目安。追加後に自由に編集できる）
+const EVENT_PRESETS = [
+  { label: '教育費（大学）', amountMan: 500, offsetYears: 15 },
+  { label: '住宅頭金', amountMan: 1000, offsetYears: 5 },
+  { label: '車の買い替え', amountMan: 250, offsetYears: 3 },
+  { label: '旅行・記念', amountMan: 50, offsetYears: 1 },
+];
+
+function addEventRow({ label = '', amountMan = 100, offsetYears = 10 } = {}) {
+  const age = Math.max(
+    state.inputs.currentAge + 1,
+    Math.min(state.inputs.currentAge + offsetYears, state.advanced.endAge),
+  );
+  state.events.push({ age, amount: manToYen(amountMan), label });
+  renderEvents();
+  update();
+}
+
+function renderEventPresets() {
+  const box = $('eventPresets');
+  for (const p of EVENT_PRESETS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'event-preset';
+    btn.textContent = `＋${p.label}`;
+    btn.addEventListener('click', () => addEventRow(p));
+    box.appendChild(btn);
+  }
+}
+
+function renderEvents() {
+  const list = $('eventList');
+  list.innerHTML = '';
+  for (const ev of state.events) {
+    const row = document.createElement('div');
+    row.className = 'event-row';
+
+    const label = document.createElement('input');
+    label.type = 'text';
+    label.placeholder = 'イベント名';
+    label.value = ev.label ?? '';
+    label.addEventListener('input', () => {
+      ev.label = label.value;
+      saveState(state);
+    });
+
+    const age = document.createElement('input');
+    age.type = 'number';
+    age.min = '18';
+    age.max = '110';
+    age.value = ev.age;
+    age.addEventListener('input', () => {
+      ev.age = Math.max(0, Number(age.value) || 0);
+      update();
+    });
+
+    const ageUnit = document.createElement('span');
+    ageUnit.textContent = '歳';
+
+    const amount = document.createElement('input');
+    amount.type = 'number';
+    amount.min = '0';
+    amount.step = '10';
+    amount.value = yenToMan(ev.amount);
+    amount.addEventListener('input', () => {
+      ev.amount = manToYen(Math.max(0, Number(amount.value) || 0));
+      update();
+    });
+
+    const amountUnit = document.createElement('span');
+    amountUnit.textContent = '万円';
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'event-del';
+    del.setAttribute('aria-label', 'イベントを削除');
+    del.textContent = '×';
+    del.addEventListener('click', () => {
+      state.events.splice(state.events.indexOf(ev), 1);
+      renderEvents();
+      update();
+    });
+
+    row.append(label, age, ageUnit, amount, amountUnit, del);
+    list.appendChild(row);
+  }
+}
+
 function renderReaction(reaction) {
   const box = $('reaction');
   clearTimeout(reactionTimer);
@@ -169,6 +261,7 @@ function debounce(fn, ms) {
 function init() {
   state = loadState();
   writeForm();
+  renderEvents();
 
   const onType = debounce(() => update({ withReaction: true }), 150);
   for (const f of FIELDS) $(f.id).addEventListener('input', onType);
@@ -186,6 +279,9 @@ function init() {
     $('advanced').open = true;
     $('pensionAnnual').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+
+  renderEventPresets();
+  $('addEvent').addEventListener('click', () => addEventRow());
 
   update();
 }

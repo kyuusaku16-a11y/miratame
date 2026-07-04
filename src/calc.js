@@ -1,14 +1,14 @@
 // 2バケツ（現金/投資）＋収入モデルで currentAge〜endAge を1年刻みで計算する純粋関数。
 // params: { currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
 //           annualExpense, retireAge, pensionAnnual, pensionStartAge,
-//           retirementBonus, retiredExpenseRatio, endAge }
+//           retirementBonus, retiredExpenseRatio, endAge, events?: [{age, amount, label}] }
 // rate: 年利（小数）
 // 返り値: [{ age, cash, invested, assets }]（各整数、assets = max(0, cash+invested)）
 export function projectAssets(params, rate) {
   const {
     currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
     annualExpense, retireAge, pensionAnnual, pensionStartAge,
-    retirementBonus, retiredExpenseRatio, endAge,
+    retirementBonus, retiredExpenseRatio, endAge, events = [],
   } = params;
 
   const annualInvest = monthlyInvest * 12;
@@ -17,6 +17,14 @@ export function projectAssets(params, rate) {
   let invested = investedAsset;
   let cash = totalAsset - investedAsset;
   const series = [];
+
+  // ライフイベント: 年齢→一時支出合計（現在年齢以前・終了年齢超は無視）
+  const eventCost = new Map();
+  for (const ev of events) {
+    if (ev.age > currentAge && ev.age <= endAge) {
+      eventCost.set(ev.age, (eventCost.get(ev.age) || 0) + ev.amount);
+    }
+  }
 
   for (let age = currentAge; age <= endAge; age++) {
     const assets = Math.max(0, cash + invested);
@@ -42,6 +50,9 @@ export function projectAssets(params, rate) {
 
     // 退職年齢の年に退職金を現金へ一括加算
     if (age + 1 === retireAge) cash += retirementBonus;
+
+    // ライフイベントの一時支出（該当年齢のスナップショットに反映）
+    if (eventCost.has(age + 1)) cash -= eventCost.get(age + 1);
 
     // 現金不足は投資から現金優先で取り崩す（現役・退職後とも。
     // 使った分に利回りが付き続ける過大評価を防ぐ — 2026-07-04修正）

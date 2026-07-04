@@ -103,3 +103,16 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 footer { padding: 8px 32px 28px; }
 footer p { margin: 2px 0; font-size: 11px; color: var(--color-muted); line-height: 1.6; }
 @media (max-width: 720px) { footer { padding: 4px 16px 24px; } }
+
+/* ライフイベント（§4.2） */
+.event-row { display: grid; grid-template-columns: 1fr 4.2em auto 5.2em auto 1.8em; gap: 6px; align-items: center; margin: 8px 0; font-size: 12px; color: var(--color-muted); }
+.event-row input { padding: 6px 8px; border: 1px solid var(--color-line); border-radius: 8px; font-size: 13px; color: var(--color-ink); width: 100%; min-width: 0; }
+.event-del { border: none; background: none; color: var(--color-muted); font-size: 16px; cursor: pointer; padding: 2px; line-height: 1; }
+.event-del:hover { color: var(--color-warn); }
+.add-event { margin-top: 6px; border: 1px dashed var(--color-primary); background: none; color: var(--color-primary-deep); border-radius: 10px; padding: 8px 12px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.add-event:hover { background: var(--color-good-bg); }
+
+/* イベントプリセット */
+.event-presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.event-preset { border: 1px solid var(--color-line); background: var(--color-good-bg); color: var(--color-primary-deep); border-radius: 999px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.event-preset:hover { border-color: var(--color-primary); }

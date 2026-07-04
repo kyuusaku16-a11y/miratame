@@ -20,7 +20,7 @@ function fmtYen(yen) {
  *
  * @param {HTMLCanvasElement} canvas
  * @param {{ age: number, assets: number }[]} mainSeries  — user's projected series
- * @param {{ targetAmount: number, retireAge: number, expectedReturn: number }} params
+ * @param {{ targetAmount: number, retireAge: number, expectedReturn: number, events?: Array<{age: number, label?: string, amount: number}> }} params
  * @param {Chart|null|undefined} existingChart — previous Chart instance to destroy first
  * @returns {Chart}
  */
@@ -30,11 +30,18 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
   const labels  = mainSeries.map((p) => p.age);
   const mainData = mainSeries.map((p) => p.assets);
 
-  // --- highlighted point at retireAge ---
+  // --- highlighted points: retirement (orange) + life events (green) ---
   const retirementIdx = mainSeries.findIndex((p) => p.age === params.retireAge);
-  const pointRadius = mainSeries.map((_, i) => (i === retirementIdx ? 7 : 0));
-  const pointBg     = mainSeries.map((_, i) => (i === retirementIdx ? '#f59e0b' : 'transparent'));
-  const pointBorder = mainSeries.map((_, i) => (i === retirementIdx ? '#fff'    : 'transparent'));
+  const eventAges = new Set(
+    (params.events ?? [])
+      .filter((e) => e.age > mainSeries[0].age && e.age <= mainSeries[mainSeries.length - 1].age)
+      .map((e) => e.age),
+  );
+  const pointRadius = mainSeries.map((p, i) => (i === retirementIdx ? 7 : eventAges.has(p.age) ? 5 : 0));
+  const pointBg = mainSeries.map((p, i) =>
+    i === retirementIdx ? '#f59e0b' : eventAges.has(p.age) ? '#7bc67e' : 'transparent');
+  const pointBorder = mainSeries.map((p, i) =>
+    i === retirementIdx || eventAges.has(p.age) ? '#fff' : 'transparent');
 
   // --- target horizontal line (constant across all labels) ---
   const targetData = mainSeries.map(() => params.targetAmount);
@@ -86,6 +93,14 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
         tooltip: {
           callbacks: {
             label: (ctx) => `${ctx.dataset.label}: ${fmtYen(ctx.parsed.y)}円`,
+            afterLabel: (ctx) => {
+              if (ctx.datasetIndex !== 0) return undefined;
+              const age = Number(ctx.label);
+              const notes = (params.events ?? [])
+                .filter((e) => e.age === age && e.age > mainSeries[0].age)
+                .map((e) => `▼ ${e.label || 'イベント'} −${fmtYen(e.amount)}円`);
+              return notes.length ? notes.join('\n') : undefined;
+            },
           },
         },
       },

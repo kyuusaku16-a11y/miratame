@@ -1,14 +1,34 @@
+// 子ども1人あたりの標準教育費（円/年）。高校まで公立・大学は私立文系・自宅通学の目安。
+// 進路コースの切替は将来対応（指示だし.md 2026-07-05）。
+const EDUCATION_BANDS = [
+  [0, 2, 100000],
+  [3, 5, 300000],
+  [6, 11, 400000],
+  [12, 14, 600000],
+  [15, 17, 700000],
+  [18, 18, 1800000],
+  [19, 21, 1300000],
+];
+
+// childAge に応じた年間教育費。範囲外（負・22歳以上）は0。
+export function educationCostAt(childAge) {
+  for (const [lo, hi, cost] of EDUCATION_BANDS) {
+    if (childAge >= lo && childAge <= hi) return cost;
+  }
+  return 0;
+}
+
 // 2バケツ（現金/投資）＋収入モデルで currentAge〜endAge を1年刻みで計算する純粋関数。
 // params: { currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
 //           annualExpense, retireAge, pensionAnnual, pensionStartAge,
-//           retirementBonus, retiredExpenseRatio, endAge, events?: [{age, amount, label}] }
+//           retirementBonus, retiredExpenseRatio, endAge, events?: [{age, amount, label}], children?: [{age}] }
 // rate: 年利（小数）
 // 返り値: [{ age, cash, invested, assets }]（各整数、assets = max(0, cash+invested)）
 export function projectAssets(params, rate) {
   const {
     currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
     annualExpense, retireAge, pensionAnnual, pensionStartAge,
-    retirementBonus, retiredExpenseRatio, endAge, events = [],
+    retirementBonus, retiredExpenseRatio, endAge, events = [], children = [],
   } = params;
 
   const annualInvest = monthlyInvest * 12;
@@ -17,6 +37,9 @@ export function projectAssets(params, rate) {
   let invested = investedAsset;
   let cash = totalAsset - investedAsset;
   const series = [];
+
+  // 教育費の差分方式: 現在年齢分は年間支出に含まれている前提で、将来との差分だけ乗せる
+  const currentEduCosts = children.map((c) => educationCostAt(c.age));
 
   // ライフイベント: 年齢→一時支出合計（現在年齢以前・終了年齢超は無視）
   const eventCost = new Map();
@@ -37,15 +60,20 @@ export function projectAssets(params, rate) {
 
     if (age === endAge) break;
 
+    let eduDelta = 0;
+    for (let ci = 0; ci < children.length; ci++) {
+      eduDelta += educationCostAt(children[ci].age + (age - currentAge)) - currentEduCosts[ci];
+    }
+
     if (age < retireAge) {
-      // 現役: 投資に利回り+積立、現金に収支余剰
+      // 現役: 投資に利回り+積立、現金に収支余剰（教育費差分を控除）
       invested = invested * (1 + rate) + annualInvest;
-      cash = cash + (annualIncome - annualExpense - annualInvest);
+      cash = cash + (annualIncome - annualExpense - annualInvest) - eduDelta;
     } else {
-      // 退職後: 投資は利回りのみ、現金は年金-老後支出
+      // 退職後: 投資は利回りのみ、現金は年金-老後支出（教育費差分は70%換算の対象外）
       invested = invested * (1 + rate);
       const pension = age >= pensionStartAge ? pensionAnnual : 0;
-      cash = cash + (pension - retiredExpense);
+      cash = cash + (pension - retiredExpense) - eduDelta;
     }
 
     // 退職年齢の年に退職金を現金へ一括加算

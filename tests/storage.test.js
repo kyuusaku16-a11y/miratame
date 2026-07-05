@@ -56,3 +56,15 @@ test('loadState: 壊れたJSONなら既定の状態を返す', () => {
   s.setItem('money-vision-state', '{壊れた');
   assert.deepEqual(loadState(s), DEFAULT_STATE);
 });
+
+test('DEFAULT_STATE: children は空配列', () => {
+  assert.deepEqual(DEFAULT_STATE.children, []);
+});
+
+test('loadState: children を配列に正規化・保存分を復元する', () => {
+  const s = mockStorage();
+  s.setItem('money-vision-state', JSON.stringify({ children: [{ age: 5 }] }));
+  assert.deepEqual(loadState(s).children, [{ age: 5 }]);
+  s.setItem('money-vision-state', JSON.stringify({ children: 'broken' }));
+  assert.deepEqual(loadState(s).children, []);
+});

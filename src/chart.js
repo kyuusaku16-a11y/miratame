@@ -4,6 +4,8 @@
 
 /* global Chart */
 
+import { educationCostAt } from './calc.js';
+
 /**
  * Format a yen value as 万 / 億 label (no trailing "円").
  * @param {number} yen
@@ -37,14 +39,37 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
       .filter((e) => e.age > mainSeries[0].age && e.age <= mainSeries[mainSeries.length - 1].age)
       .map((e) => e.age),
   );
-  const pointRadius = mainSeries.map((p, i) => (i === retirementIdx ? 7 : eventAges.has(p.age) ? 5 : 0));
+  // --- goal-reached point: first year assets touch the target ---
+  const goalIdx = mainSeries.findIndex((p) => p.assets >= params.targetAmount);
+
+  const pointRadius = mainSeries.map((p, i) =>
+    i === retirementIdx ? 7 : i === goalIdx ? 6 : eventAges.has(p.age) ? 5 : 0);
   const pointBg = mainSeries.map((p, i) =>
-    i === retirementIdx ? '#f59e0b' : eventAges.has(p.age) ? '#7bc67e' : 'transparent');
+    i === retirementIdx ? '#f59e0b' : i === goalIdx ? '#ffd97d' : eventAges.has(p.age) ? '#7bc67e' : 'transparent');
   const pointBorder = mainSeries.map((p, i) =>
-    i === retirementIdx || eventAges.has(p.age) ? '#fff' : 'transparent');
+    i === retirementIdx || i === goalIdx || eventAges.has(p.age) ? '#fff' : 'transparent');
 
   // --- target horizontal line (constant across all labels) ---
   const targetData = mainSeries.map(() => params.targetAmount);
+
+  // 目標に初めて届く年の上に「🎉 目標達成！」を描くインラインプラグイン
+  const goalBadge = {
+    id: 'goalBadge',
+    afterDatasetsDraw(chart) {
+      if (goalIdx < 0) return;
+      const pt = chart.getDatasetMeta(0).data[goalIdx];
+      if (!pt) return;
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.font = 'bold 13px "Zen Maru Gothic", "Hiragino Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#4d9a5f';
+      const x = Math.min(Math.max(pt.x, chartArea.left + 52), chartArea.right - 52);
+      const y = Math.max(pt.y - 16, chartArea.top + 14);
+      ctx.fillText('🎉 目標達成！', x, y);
+      ctx.restore();
+    },
+  };
 
   return new Chart(canvas, {
     type: 'line',
@@ -81,6 +106,7 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
         },
       ],
     },
+    plugins: [goalBadge],
     options: {
       animation: { duration: 200 },
       responsive:  true,
@@ -91,15 +117,32 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
           labels:   { boxWidth: 16, font: { size: 12 } },
         },
         tooltip: {
+          // 年齢と資産を主役に、支出の内訳だけを添える（目標・利回りは出さない）
+          displayColors: false,
+          filter: (item) => item.datasetIndex === 0,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 12 },
           callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: ${fmtYen(ctx.parsed.y)}円`,
-            afterLabel: (ctx) => {
-              if (ctx.datasetIndex !== 0) return undefined;
+            title: (items) =>
+              items.length ? [`${items[0].label}歳`, `資産 ${fmtYen(items[0].parsed.y)}円`] : '',
+            label: (ctx) => {
               const age = Number(ctx.label);
+              const startAge = mainSeries[0].age;
               const notes = (params.events ?? [])
-                .filter((e) => e.age === age && e.age > mainSeries[0].age)
+                .filter((e) => e.age === age && e.age > startAge)
                 .map((e) => `▼ ${e.label || 'イベント'} −${fmtYen(e.amount)}円`);
-              return notes.length ? notes.join('\n') : undefined;
+              if (age > startAge) {
+                (params.children ?? []).forEach((c, i) => {
+                  const childAge = c.age + (age - startAge);
+                  const delta = educationCostAt(childAge) - educationCostAt(c.age);
+                  if (delta !== 0) {
+                    const name = c.name || `子ども${i + 1}`;
+                    const who = childAge >= 22 ? `${name}: 独立後` : `${name}: ${childAge}歳`;
+                    notes.push(`▼ 教育費 ${delta > 0 ? '+' : '−'}${fmtYen(Math.abs(delta))}円/年（${who}）`);
+                  }
+                });
+              }
+              return notes;
             },
           },
         },

@@ -73,6 +73,12 @@
               <option>90</option><option>95</option><option>100</option><option>105</option><option>110</option>
             </select>
           </label>
+          <h3>お子さまの教育費</h3>
+          <p class="field-note">年齢を入れると将来の教育費を自動で概算します（高校まで公立・大学は私立文系の目安）</p>
+          <p class="field-note">いまの支出に含まれる教育費との差分だけを足すので、二重計上になりません</p>
+          <p class="field-note">独立後は教育費のぶん支出が減るため、生涯でみると資産がむしろ増えて見えることがあります</p>
+          <div id="childList"></div>
+          <button id="addChild" class="add-event" type="button">＋ 子どもを追加</button>
           <h3>ライフイベント</h3>
           <p class="field-note">教育費や住宅頭金など、その年齢だけの大きな支出を足せます</p>
           <div id="eventPresets" class="event-presets"></div>
@@ -93,6 +99,11 @@
         <div class="panel chart-wrap">
           <canvas id="chart"></canvas>
           <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は平均値で計算中（タップで変更）</button>
+        </div>
+
+        <div class="panel schedule" id="schedule" hidden>
+          <h2>これからの大きな支出</h2>
+          <div id="scheduleList"></div>
         </div>
 
         <div id="reaction" class="reaction" hidden aria-live="polite"><span class="char" aria-hidden="true">🌱</span><span id="reactionText"></span></div>

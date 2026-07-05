@@ -5,6 +5,7 @@ import { renderChart } from './chart.js';
 import { fmtMoney, manToYen, yenToMan } from './format.js';
 import { deriveValidation } from './validation.js';
 import { buildReaction } from './reactions.js';
+import { buildSchedule } from './schedule.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
 // （man=万円⇄円 / pct100=%⇄比率 / raw=そのまま）。
@@ -70,7 +71,7 @@ function writeForm() {
 }
 
 function paramsOf(s) {
-  return { ...s.inputs, ...s.advanced, events: s.events };
+  return { ...s.inputs, ...s.advanced, events: s.events, children: s.children };
 }
 
 function syncSliders() {
@@ -126,13 +127,84 @@ function renderAdvancedSummary() {
   $('defaultsNote').hidden = !isDefault;
 }
 
+function renderSchedule(rows) {
+  const panel = $('schedule');
+  const list = $('scheduleList');
+  list.innerHTML = '';
+  panel.hidden = rows.length === 0;
+  for (const r of rows) {
+    const row = document.createElement('div');
+    row.className = 'sched-row';
+    const when = document.createElement('span');
+    when.className = 'sched-when';
+    when.textContent = `${r.year}年（${r.age}歳）`;
+    const items = document.createElement('div');
+    items.className = 'sched-items';
+    for (const t of r.items) {
+      const item = document.createElement('div');
+      item.textContent = t;
+      items.appendChild(item);
+    }
+    row.append(when, items);
+    list.appendChild(row);
+  }
+}
+
+// --- 子どもの教育費 ---
+// 行の再描画は追加/削除時のみ（ライフイベントと同じ流儀）。
+function renderChildren() {
+  const list = $('childList');
+  list.innerHTML = '';
+  state.children.forEach((child, i) => {
+    const row = document.createElement('div');
+    row.className = 'child-row';
+
+    // 名前は任意。未入力なら予定表・グラフでは「子どもN」と表示される
+    const who = document.createElement('input');
+    who.type = 'text';
+    who.className = 'who';
+    who.placeholder = `子ども${i + 1}（名前・任意）`;
+    who.value = child.name ?? '';
+    who.addEventListener('input', () => {
+      child.name = who.value;
+      update();
+    });
+
+    const age = document.createElement('input');
+    age.type = 'number';
+    age.min = '0';
+    age.max = '30';
+    age.value = child.age;
+    age.addEventListener('input', () => {
+      child.age = Math.max(0, Number(age.value) || 0);
+      update();
+    });
+
+    const unit = document.createElement('span');
+    unit.textContent = '歳';
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'event-del';
+    del.setAttribute('aria-label', '子どもを削除');
+    del.textContent = '×';
+    del.addEventListener('click', () => {
+      state.children.splice(state.children.indexOf(child), 1);
+      renderChildren();
+      update();
+    });
+
+    row.append(who, age, unit, del);
+    list.appendChild(row);
+  });
+}
+
 // --- ライフイベント（§4.2）---
 // 行の再描画は追加/削除時のみ（入力中のフォーカスを守る）。並び替えもしない。
 // ラベルはユーザー入力文字列のため createElement + value のみで扱う（innerHTML禁止）。
 
 // よく使うイベントのプリセット（金額は目安。追加後に自由に編集できる）
 const EVENT_PRESETS = [
-  { label: '教育費（大学）', amountMan: 500, offsetYears: 15 },
   { label: '住宅頭金', amountMan: 1000, offsetYears: 5 },
   { label: '車の買い替え', amountMan: 250, offsetYears: 3 },
   { label: '旅行・記念', amountMan: 50, offsetYears: 1 },
@@ -244,6 +316,7 @@ function update({ withReaction = false } = {}) {
   renderComments(buildComments(kpis, params));
   renderValidation(deriveValidation(params));
   renderAdvancedSummary();
+  renderSchedule(buildSchedule(params));
   if (withReaction) renderReaction(buildReaction(prevKpis, kpis));
   prevKpis = kpis;
   syncSliders();
@@ -260,8 +333,12 @@ function debounce(fn, ms) {
 
 function init() {
   state = loadState();
+  // デプロイ直後の新旧モジュール混在キャッシュ対策: 配列フィールドを保証する
+  state.events ??= [];
+  state.children ??= [];
   writeForm();
   renderEvents();
+  renderChildren();
 
   const onType = debounce(() => update({ withReaction: true }), 150);
   for (const f of FIELDS) $(f.id).addEventListener('input', onType);
@@ -281,6 +358,11 @@ function init() {
   });
 
   renderEventPresets();
+  $('addChild').addEventListener('click', () => {
+    state.children.push({ age: 5 });
+    renderChildren();
+    update();
+  });
   $('addEvent').addEventListener('click', () => addEventRow());
 
   update();

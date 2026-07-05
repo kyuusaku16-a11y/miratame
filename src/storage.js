@@ -35,6 +35,7 @@ export const DEFAULT_STATE = deepFreeze({
   inputs: { ...DEFAULT_INPUTS },
   advanced: { ...DEFAULT_ADVANCED },
   events: [],
+  children: [],
   settings: { themeId: 'sprout' },
   scenarios: [],
 });
@@ -45,6 +46,7 @@ function freshDefault() {
     inputs: { ...DEFAULT_INPUTS },
     advanced: { ...DEFAULT_ADVANCED },
     events: [],
+    children: [],
     settings: { themeId: 'sprout' },
     scenarios: [],
   };
@@ -60,6 +62,7 @@ export function loadState(storage = globalThis.localStorage) {
       inputs: { ...DEFAULT_INPUTS, ...(p.inputs || {}) },
       advanced: { ...DEFAULT_ADVANCED, ...(p.advanced || {}) },
       events: Array.isArray(p.events) ? p.events : [],
+      children: Array.isArray(p.children) ? p.children : [],
       settings: { themeId: 'sprout', ...(p.settings || {}) },
       scenarios: Array.isArray(p.scenarios) ? p.scenarios : [],
     };

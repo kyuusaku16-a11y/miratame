@@ -634,3 +634,23 @@ header .char-img {
   .comment.education-note .comment-visual img { max-width: 84px; max-height: 70px; }
   .summary-comment .comment-visual img { max-width: 87px; max-height: 73px; }
 }
+
+/* ===== モバイル最終調整（最下部ブロックが決定版。個別調整はここに） ===== */
+@media (max-width: 720px) {
+  /* ヘッダー: 帯はコンパクトに、挨拶（吹き出し＋小鳥）は非表示 */
+  header { margin: 10px 12px 8px; padding: 10px 14px; min-height: 0; }
+  .greeting { display: none; }
+  header .char-img { width: 60px; height: 46px; padding: 4px 6px; }
+  .brand-text h1 { font-size: 18px; }
+  header .tagline { font-size: 10px; }
+
+  /* KPIカード: アイコンと文字を一回り小さく */
+  .kpi { padding: 10px 12px; gap: 8px; min-height: 0; }
+  .kpi-icon { width: 44px; height: 44px; }
+  .kpi-icon img { width: 34px; height: 34px; }
+  .kpi-value { font-size: 15px; }
+  .kpi-label { font-size: 10px; }
+
+  /* 支出カードは縦積みに（3列は幅不足） */
+  .expense-cards { grid-template-columns: 1fr; }
+}

@@ -677,3 +677,12 @@ header .char-img {
 @media (max-width: 720px) {
   .comment.note { grid-template-columns: 44px minmax(0, 1fr); }
 }
+
+/* タイトルを大きく見やすく（2026-07-07 ユーザー指定） */
+.brand-text h1 { font-size: 30px; letter-spacing: 0.02em; }
+header .tagline { font-size: 13px; }
+@media (max-width: 720px) {
+  .brand-text h1 { font-size: 23px; }
+  header .tagline { font-size: 11px; }
+  header .char-img { width: 68px; height: 52px; }
+}

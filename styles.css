@@ -58,23 +58,23 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 22px;
-  margin: 2px 0 6px;
+  height: 32px; /* 指で狙えるタッチ領域を確保 */
+  margin: 0 0 4px;
   background: transparent;
 }
 input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: var(--color-line); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px; height: 18px; margin-top: -6px;
+  width: 26px; height: 26px; margin-top: -10px;
   border-radius: 50%;
   background: var(--color-primary);
-  border: 2px solid #fff;
+  border: 3px solid #fff;
   box-shadow: var(--shadow);
   cursor: pointer;
 }
 input[type="range"]::-moz-range-track { height: 6px; border-radius: 999px; background: var(--color-line); }
 input[type="range"]::-moz-range-thumb {
-  width: 16px; height: 16px;
+  width: 24px; height: 24px;
   border-radius: 50%;
   background: var(--color-primary);
   border: 2px solid #fff;
@@ -109,7 +109,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 .icon-yellow { background: #f7efd0; }
 .kpi-text { min-width: 0; }
 .kpi-label { display: block; font-size: 11px; color: var(--color-muted); }
-.kpi-value { display: block; font-size: 18px; font-weight: 700; margin-top: 2px; font-family: var(--font-display); }
+.kpi-value { display: block; font-size: 18px; font-weight: 700; margin-top: 2px; font-family: var(--font-display); white-space: pre-line; }
 .kpi-value.warn { color: var(--color-warn); }
 
 .chart-wrap { position: relative; border-radius: 20px; }
@@ -197,6 +197,10 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 
 @media (max-width: 720px) {
   main { grid-template-columns: 1fr; padding: 12px 16px 32px; }
+  /* 結果ファースト: スマホは「見える化」が先、入力はその下 */
+  .diagnosis-hero { order: 0; }
+  .results { order: 1; }
+  .panel.form { order: 2; }
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .below-chart { grid-template-columns: 1fr; }
   .comments { grid-template-columns: 1fr; }
@@ -732,6 +736,35 @@ header .tagline { font-size: 13px; }
 @media (max-width: 720px) {
   .diagnosis-hero { flex-wrap: wrap; justify-content: center; text-align: center; }
   .diagnosis-hero .dh-text { flex-basis: 100%; align-items: center; }
+}
+
+/* スマホ用の資産寿命固定バー（PCは非表示。KPIカードかグラフが見えている間も隠す） */
+.lifetime-bar { display: none; }
+@media (max-width: 720px) {
+  .lifetime-bar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #fdeef1, #fbe6e4);
+    border: 2px solid var(--color-primary);
+    border-radius: 999px;
+    padding: 8px 16px;
+    box-shadow: 0 6px 20px rgba(160, 90, 110, 0.3);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .lifetime-bar[hidden] { display: none; }
+  .lifetime-bar img { width: 30px; height: 30px; object-fit: contain; }
+  .lifetime-bar .lb-label { font-size: 12px; color: var(--color-muted); }
+  .lifetime-bar .lb-value { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--color-primary-deep); }
+  .lifetime-bar .lb-value.warn { color: var(--color-warn); }
+  body { padding-bottom: 64px; } /* バーが最下部の文章を隠さないように */
 }
 
 /* 結果シェアボタン */

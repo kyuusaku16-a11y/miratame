@@ -95,15 +95,22 @@ function renderKpis(kpis, params) {
   $('kpi-current').textContent = fmtMoney(kpis.currentAssets);
   $('kpi-final-label').textContent = `${params.endAge}歳時点の資産`;
   $('kpi-final').textContent = fmtMoney(kpis.finalAssets);
+  // 改行位置は \n で明示（.kpi-value は white-space: pre-line。単語の途中で折れないように）
   $('kpi-target').textContent =
-    kpis.yearsToTarget === null ? `${params.endAge}歳までに未到達` : `あと${kpis.yearsToTarget}年（${kpis.targetAge}歳）`;
+    kpis.yearsToTarget === null
+      ? `${params.endAge}歳までに\n未到達`
+      : `あと${kpis.yearsToTarget}年\n（${kpis.targetAge}歳）`;
   const life = $('kpi-lifetime');
   life.textContent = kpis.survivesToEnd
-    ? `${params.endAge}歳まで安心圏`
+    ? `${params.endAge}歳まで\n安心圏`
     : kpis.lifetimeAge === null
-      ? '見直しの余地あり'
+      ? '見直しの\n余地あり'
       : `約${kpis.lifetimeAge}歳まで`;
   life.classList.toggle('warn', !kpis.survivesToEnd);
+  // スマホの固定バーにも同じ値を（こちらは1行で）
+  const bar = $('lifetimeBarValue');
+  bar.textContent = life.textContent.replace('\n', '');
+  bar.classList.toggle('warn', !kpis.survivesToEnd);
 }
 
 function makeCommentCard(c) {
@@ -673,6 +680,21 @@ function init() {
     if (file) importStateFile(file);
     e.target.value = ''; // 同じファイルの再選択でも change を発火させる
   });
+
+  // スマホの資産寿命バー: KPIカードもグラフも見えていない時だけ出す
+  $('lifetimeBar').addEventListener('click', () => {
+    document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  const visible = new Map();
+  const barObserver = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) visible.set(e.target, e.isIntersecting);
+      $('lifetimeBar').hidden = [...visible.values()].some(Boolean);
+    },
+    { threshold: 0.15 },
+  );
+  barObserver.observe(document.querySelector('.kpis'));
+  barObserver.observe(document.querySelector('.chart-wrap'));
 
   // 「前回とくらべて」: 先月以前の記録を、update() が今月分を書く前に読んでおく
   const prevSnap = previousSnapshot(loadHistory());

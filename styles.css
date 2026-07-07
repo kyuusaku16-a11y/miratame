@@ -1017,3 +1017,13 @@ footer .footer-link { color: var(--color-primary-deep); }
   .expense-card button { grid-area: btn; margin-top: 0; white-space: nowrap; }
   .expense-card strong img { width: 30px; height: 30px; }
 }
+
+/* スマホ: 「これからの大きな支出」は折りたたみ（見出しタップで開閉。PCは常時表示） */
+@media (max-width: 720px) {
+  .schedule h2 { cursor: pointer; }
+  .schedule h2 .chev { margin-left: auto; }
+  .schedule h2 .chev::before { content: '▾'; font-size: 14px; color: var(--color-muted); }
+  .schedule.collapsed h2 .chev::before { content: '▸'; }
+  .schedule.collapsed #scheduleList { display: none; }
+  .schedule.collapsed h2 { margin-bottom: 0; }
+}

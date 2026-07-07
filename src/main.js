@@ -812,6 +812,13 @@ function init() {
   barObserver.observe(document.querySelector('.kpis'));
   barObserver.observe(document.querySelector('.chart-wrap'));
 
+  // スマホでは「これからの大きな支出」を折りたたみ（CSSがスマホ幅でのみ効く）
+  $('schedule').classList.add('collapsed');
+  $('scheduleToggle').addEventListener('click', () => {
+    if (!matchMedia('(max-width: 720px)').matches) return;
+    $('schedule').classList.toggle('collapsed');
+  });
+
   renderStamps();
   $('stampBtn').addEventListener('click', pressStamp);
   $('recordBtn').addEventListener('click', openRecordDialog);

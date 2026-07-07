@@ -1,6 +1,6 @@
 import { projectAssets, deriveKpis, educationCostAt, EDUCATION_COURSES } from './calc.js';
 import { buildComments } from './comments.js';
-import { loadState, saveState, normalizeState, DEFAULT_ADVANCED } from './storage.js';
+import { loadState, saveState, normalizeState, addScenario, removeScenario, DEFAULT_ADVANCED } from './storage.js';
 import { renderChart } from './chart.js';
 import { fmtMoney, manToYen, yenToMan } from './format.js';
 import { deriveValidation } from './validation.js';
@@ -641,7 +641,80 @@ function update({ withReaction = false, light = false } = {}) {
     recordSnapshot(kpis); // 今月分のスナップショットを常に最新へ（来月の「前回とくらべて」用）
   }
   syncSliders();
-  chart = renderChart($('chart'), mainSeries, params, chart);
+
+  // 保存プランとの比較線（選択中のときだけ）
+  let compare = null;
+  const compareSc = state.scenarios.find((s) => s.id === compareId) ?? null;
+  if (compareSc) {
+    const cp = { ...compareSc.inputs, ...compareSc.advanced, events: compareSc.events, children: compareSc.children };
+    const cSeries = projectAssets(cp, cp.expectedReturn / 100);
+    compare = { label: `保存: ${compareSc.name}`, series: cSeries };
+    const cKpis = deriveKpis(cSeries, cp);
+    $('scenarioMsg').textContent =
+      `${compareSc.name}: ${lifeText(cKpis, cp.endAge)} ／ いまのプラン: ${lifeText(kpis, params.endAge)}`;
+    $('scenarioMsg').hidden = false;
+  } else {
+    $('scenarioMsg').hidden = true;
+  }
+  chart = renderChart($('chart'), mainSeries, params, chart, compare);
+}
+
+// 資産寿命の短い言い方（シナリオ比較用）
+function lifeText(kpis, endAge) {
+  if (kpis.survivesToEnd) return `${endAge}歳まで安心圏`;
+  return kpis.lifetimeAge === null ? '要見直し' : `資産寿命 約${kpis.lifetimeAge}歳`;
+}
+
+// シナリオ保存・比較（仕様§9）
+let compareId = null;
+
+function renderScenarios() {
+  const list = $('scenarioList');
+  list.textContent = '';
+  for (const sc of state.scenarios) {
+    const chip = document.createElement('span');
+    chip.className = `scenario-chip${sc.id === compareId ? ' active' : ''}`;
+    const name = document.createElement('button');
+    name.type = 'button';
+    name.textContent = sc.id === compareId ? `📊 ${sc.name}` : sc.name;
+    name.title = 'タップでグラフにくらべる線を表示/非表示';
+    name.addEventListener('click', () => {
+      compareId = compareId === sc.id ? null : sc.id;
+      renderScenarios();
+      update();
+    });
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'x';
+    del.textContent = '×';
+    del.setAttribute('aria-label', `${sc.name}を削除`);
+    del.addEventListener('click', () => {
+      state = removeScenario(state, sc.id);
+      if (compareId === sc.id) compareId = null;
+      saveState(state);
+      renderScenarios();
+      update();
+    });
+    chip.append(name, del);
+    list.appendChild(chip);
+  }
+}
+
+function saveCurrentScenario() {
+  trackEvent('scenario-save');
+  const name = `積立${yenToMan(state.inputs.monthlyInvest)}万・利回り${state.inputs.expectedReturn}%`;
+  const res = addScenario(state, name);
+  if (res.error) {
+    $('scenarioMsg').textContent = res.error;
+    $('scenarioMsg').hidden = false;
+    return;
+  }
+  state = res.state;
+  saveState(state);
+  compareId = res.scenario.id; // 保存した線をすぐグラフに出す
+  renderScenarios();
+  update();
+  renderReaction({ type: 'improved', text: 'プランを保存したよ！スライダーを動かして、未来をくらべてみて🌱' }, 6000);
 }
 
 function debounce(fn, ms) {
@@ -740,6 +813,13 @@ function init() {
 
   $('recordBtn').addEventListener('click', recordThisMonth);
   $('calendarBtn').addEventListener('click', downloadRecordCalendar);
+  $('saveScenarioBtn').addEventListener('click', saveCurrentScenario);
+  renderScenarios();
+
+  if (FEEDBACK_URL) {
+    $('feedbackLink').href = FEEDBACK_URL;
+    $('feedbackRow').hidden = false;
+  }
 
   // ホーム画面追加のヒント: 2回目以降の訪問・スマホ・ブラウザ表示のときだけ
   let pwaHintDone = false;
@@ -771,7 +851,13 @@ function init() {
   const seasonal = seasonalMessage();
   if (welcome) renderReaction(welcome, 8000);
   else if (seasonal) renderReaction({ type: 'improved', ...seasonal }, 8000);
+
+  // 図鑑ページの「診断する」リンクから来たら、すぐ結果を見せる
+  if (new URLSearchParams(location.search).has('diagnose')) openShareDialog();
 }
+
+// 感想・要望フォームのURL（用意できたらここに貼るだけでフッターに現れる）
+const FEEDBACK_URL = '';
 
 // 匿名イベント計測: 何回使われたかの回数だけをGoatCounterに送る。
 // 入力値・診断結果などの中身は一切送らない（フッターの明記どおり）

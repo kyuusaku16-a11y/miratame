@@ -4,6 +4,8 @@ import {
   loadState,
   saveState,
   normalizeState,
+  addScenario,
+  removeScenario,
   DEFAULT_STATE,
   DEFAULT_INPUTS,
   DEFAULT_ADVANCED,
@@ -95,4 +97,35 @@ test('normalizeState: 配列フィールドの型崩れは空配列に直す', (
   assert.deepEqual(st.events, []);
   assert.deepEqual(st.children, []);
   assert.deepEqual(st.scenarios, []);
+});
+
+test('addScenario: いまの入力一式を深いコピーで保存する', () => {
+  const st = normalizeState({ inputs: { currentAge: 40 }, children: [{ age: 5 }] });
+  const { state: st2, error } = addScenario(st, 'プランA', 1000);
+  assert.equal(error, undefined);
+  assert.equal(st2.scenarios.length, 1);
+  assert.equal(st2.scenarios[0].name, 'プランA');
+  assert.equal(st2.scenarios[0].inputs.currentAge, 40);
+  // 深いコピー: 元を変えてもシナリオは変わらない
+  st2.inputs.currentAge = 99;
+  st2.children[0].age = 10;
+  assert.equal(st2.scenarios[0].inputs.currentAge, 40);
+  assert.equal(st2.scenarios[0].children[0].age, 5);
+});
+
+test('addScenario: 3つまで・4つ目はエラーメッセージ', () => {
+  let st = normalizeState({});
+  for (let i = 0; i < 3; i++) st = addScenario(st, `p${i}`, i).state;
+  const { state: same, error } = addScenario(st, 'p4', 9);
+  assert.equal(same.scenarios.length, 3);
+  assert.ok(error.includes('3つ'));
+});
+
+test('removeScenario: idで削除', () => {
+  let st = normalizeState({});
+  st = addScenario(st, 'a', 1).state;
+  st = addScenario(st, 'b', 2).state;
+  const st2 = removeScenario(st, st.scenarios[0].id);
+  assert.equal(st2.scenarios.length, 1);
+  assert.equal(st2.scenarios[0].name, 'b');
 });

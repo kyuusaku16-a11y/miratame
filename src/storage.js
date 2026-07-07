@@ -78,6 +78,29 @@ export function loadState(storage = globalThis.localStorage) {
   }
 }
 
+// シナリオ保存（仕様§9）: いまの入力一式をスナップショットとして持つ。最大3つ
+const MAX_SCENARIOS = 3;
+
+export function addScenario(state, name, now = Date.now()) {
+  if (state.scenarios.length >= MAX_SCENARIOS) {
+    return { state, error: '保存できるのは3つまで。いらないプランを削除してね' };
+  }
+  const scenario = {
+    id: `s${now}-${state.scenarios.length}`,
+    name,
+    savedAt: now,
+    inputs: { ...state.inputs },
+    advanced: { ...state.advanced },
+    events: state.events.map((e) => ({ ...e })),
+    children: state.children.map((c) => ({ ...c })),
+  };
+  return { state: { ...state, scenarios: [...state.scenarios, scenario] }, scenario };
+}
+
+export function removeScenario(state, id) {
+  return { ...state, scenarios: state.scenarios.filter((s) => s.id !== id) };
+}
+
 export function saveState(state, storage = globalThis.localStorage) {
   try {
     storage?.setItem(KEY, JSON.stringify(state));

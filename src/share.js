@@ -83,6 +83,26 @@ export function diagnoseType(kpis, params) {
   };
 }
 
+// 16タイプすべての一覧（図鑑ページ用）
+export function allTypes() {
+  const types = [];
+  for (const persona of Object.values(PERSONAS)) {
+    for (const animal of Object.values(ANIMALS)) {
+      const name = `${persona.label}${animal.label}`;
+      types.push({
+        animal,
+        persona,
+        name,
+        tags: [animal.flow, animal.grow, persona.plan, persona.dream],
+        quote: QUOTES[name],
+        img: `assets/types/${animal.id}-${persona.id}.png`,
+        placeholder: PLACEHOLDER_IMG[animal.id],
+      });
+    }
+  }
+  return types;
+}
+
 // シェア文（金額なし・タイプ名と4タグ入り）
 export function buildShareText(kpis, params) {
   const t = diagnoseType(kpis, params);

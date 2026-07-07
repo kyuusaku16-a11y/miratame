@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>お金の性格診断 全16タイプ図鑑｜マネービジョン</title>
+    <meta
+      name="description"
+      content="お金の性格診断の全16タイプを一挙紹介。ためる×そだてるのリス、コツコツのハムスター、まわして増やすミツバチ、ゆったりカピバラ——あなたはどのタイプ？"
+    />
+    <meta property="og:title" content="お金の性格診断 全16タイプ図鑑" />
+    <meta property="og:description" content="あなたのお金の性格は16タイプのどれ？無料・30秒・登録不要の診断。" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:url" content="https://kyuusaku16-a11y.github.io/money-vision/types.html" />
+    <link rel="canonical" href="https://kyuusaku16-a11y.github.io/money-vision/types.html" />
+    <link rel="icon" href="assets/sprout.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="guide">
+    <header>
+      <div class="brand">
+        <img class="char-img" src="assets/pair-sit.png" alt="" aria-hidden="true" />
+        <div class="brand-text">
+          <h1>お金の性格診断</h1>
+          <p class="tagline">全16タイプ図鑑</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="guide-main">
+      <article class="panel guide-body">
+        <p><a class="guide-back" href="./">← シミュレーターにもどる</a></p>
+        <p>
+          お金の性格は「ためる/まわす」「そだてる/まもる」で決まる<strong>動物4種</strong>と、
+          「地図/コンパス」「大志/満ち足り」で決まる<strong>性格4種</strong>のかけ合わせで、ぜんぶで16タイプ。
+          どのタイプにも、いいところしかありません。
+        </p>
+        <div class="type-grid" id="typeGrid"></div>
+        <p class="guide-cta"><a href="./?diagnose=1">🌰 自分のタイプを診断する（無料・30秒）</a></p>
+      </article>
+    </main>
+
+    <footer>
+      <p>診断はマネービジョンの入力内容から4つの軸を読み取るお楽しみ機能です。結果に金額は含まれません。</p>
+      <p><a href="./">トップにもどる</a>／<a href="guide.html">使い方と計算の仕組み</a></p>
+    </footer>
+
+    <script type="module">
+      import { allTypes } from './src/share.js';
+      const grid = document.getElementById('typeGrid');
+      for (const t of allTypes()) {
+        const card = document.createElement('div');
+        card.className = 'type-card';
+        const img = document.createElement('img');
+        img.src = t.img;
+        img.alt = t.name;
+        img.loading = 'lazy';
+        img.addEventListener('error', () => { img.src = t.placeholder; }, { once: true });
+        const name = document.createElement('strong');
+        name.textContent = t.name;
+        const tags = document.createElement('p');
+        tags.className = 'type-tags';
+        tags.textContent = t.tags.join('×');
+        const quote = document.createElement('p');
+        quote.className = 'type-quote';
+        quote.textContent = `「${t.quote}」`;
+        card.append(img, name, tags, quote);
+        grid.appendChild(card);
+      }
+    </script>
+    <script data-goatcounter="https://money-vision.goatcounter.com/count" async src="vendor/count.js"></script>
+  </body>
+</html>

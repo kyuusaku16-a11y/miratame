@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deriveAxes, diagnoseType, buildShareText, ANIMALS, PERSONAS } from '../src/share.js';
+import { deriveAxes, diagnoseType, buildShareText, allTypes, ANIMALS, PERSONAS } from '../src/share.js';
 
 const base = {
   currentAge: 35, annualIncome: 5000000, annualExpense: 3000000,
@@ -75,4 +75,17 @@ test('buildShareText: タイプ名・4タグ入り、金額なし', () => {
   assert.ok(t.includes('ためる') && t.includes('大志'));
   assert.ok(!t.includes('万円') && !t.includes('億円'));
   assert.ok(t.includes('#マネービジョン'));
+});
+
+test('allTypes: 16タイプすべて・名前と名言はユニーク', () => {
+  const types = allTypes();
+  assert.equal(types.length, 16);
+  assert.equal(new Set(types.map((t) => t.name)).size, 16);
+  assert.equal(new Set(types.map((t) => t.quote)).size, 16);
+  for (const t of types) {
+    assert.equal(t.tags.length, 4);
+    assert.ok(t.img.startsWith('assets/types/'));
+    assert.ok(t.placeholder.startsWith('assets/'));
+    assert.ok(!/[0-9０-９]+万円/.test(t.quote));
+  }
 });

@@ -145,7 +145,10 @@
 
         <dialog id="shareDialog" class="share-dialog">
           <img id="shareCardImg" alt="お金の性格診断の結果カード" />
-          <p class="share-dialog-note">いま入力されている数字をもとに診断しています。入力を変えると結果も変わります</p>
+          <p class="share-dialog-note">
+            いま入力されている数字をもとに診断しています。入力を変えると結果も変わります ／
+            <a href="types.html">全16タイプを見る</a>
+          </p>
           <div class="share-dialog-actions">
             <button id="shareDoBtn" type="button">📤 シェアする</button>
             <button id="shareSaveBtn" type="button">💾 画像を保存</button>
@@ -156,6 +159,11 @@
         <div class="panel chart-wrap">
           <div class="chart-box"><canvas id="chart"></canvas></div>
           <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は平均値で計算中（タップで変更）</button>
+          <div class="scenario-row">
+            <button id="saveScenarioBtn" type="button" class="scenario-save">💾 いまのプランを保存してくらべる</button>
+            <div id="scenarioList" class="scenario-list"></div>
+            <p id="scenarioMsg" class="field-note" hidden aria-live="polite"></p>
+          </div>
         </div>
 
         <div class="panel track" id="track">
@@ -210,7 +218,11 @@
       <p>マネービジョンは簡易シミュレーションです。投資助言ではなく、将来の成果を保証するものでもありません。</p>
       <p>入力データはこの端末のブラウザ内にのみ保存され、入力内容が外部へ送信されることはありません。</p>
       <p>アクセス数の把握のため、Cookieを使わない匿名のアクセス解析（GoatCounter）を利用しています。</p>
-      <p><a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a></p>
+      <p>
+        <a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a>／
+        <a class="footer-link" href="types.html">お金の性格 全16タイプ図鑑</a>
+      </p>
+      <p id="feedbackRow" hidden><a class="footer-link" id="feedbackLink" href="" target="_blank" rel="noopener">💌 感想・こんな機能がほしい（匿名でOK）</a></p>
     </footer>
 
     <script type="module" src="src/main.js"></script>

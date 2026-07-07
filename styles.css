@@ -741,6 +741,17 @@ header .tagline { font-size: 13px; }
   .diagnosis-hero .dh-text { flex-basis: 100%; align-items: center; }
 }
 
+/* シナリオ保存・くらべる */
+.scenario-row { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.scenario-save { border: 1px dashed #b08bbb; background: none; color: #7d5f88; border-radius: 999px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.scenario-save:hover { background: #f3eaf6; }
+.scenario-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.scenario-chip { display: inline-flex; align-items: center; gap: 2px; border: 1.5px solid #b08bbb; color: #7d5f88; border-radius: 999px; padding: 3px 4px 3px 12px; font-size: 12px; background: #fff; }
+.scenario-chip.active { background: #f3eaf6; box-shadow: var(--shadow); }
+.scenario-chip button { border: none; background: none; cursor: pointer; font-family: inherit; color: inherit; font-size: 12px; padding: 2px; }
+.scenario-chip .x { color: var(--color-muted); font-size: 14px; padding: 0 6px 0 2px; }
+#scenarioMsg { flex-basis: 100%; text-align: center; margin: 2px 0 0; }
+
 /* 解説ページ（guide.html） */
 .guide-main { display: block; max-width: 720px; margin: 0 auto; padding: 8px 20px 40px; }
 .guide-body { padding: 24px 26px; line-height: 1.9; }
@@ -765,6 +776,20 @@ header .tagline { font-size: 13px; }
   box-shadow: var(--shadow);
 }
 footer .footer-link { color: var(--color-primary-deep); }
+
+/* タイプ図鑑（types.html） */
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+.type-card {
+  background: #fff;
+  border: 2px solid var(--color-line);
+  border-radius: 16px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.type-card img { width: 96px; height: 96px; object-fit: contain; }
+.type-card strong { display: block; font-family: var(--font-display); color: var(--color-primary-deep); font-size: 15px; margin-top: 4px; }
+.type-tags { margin: 4px 0 6px; font-size: 11px; color: var(--color-muted); }
+.type-quote { margin: 0; font-size: 12px; line-height: 1.7; color: var(--color-ink); text-align: left; }
 
 /* 毎月のきろく（実績記録） */
 .track { margin-top: 16px; }

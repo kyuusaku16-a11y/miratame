@@ -39,13 +39,18 @@ function fmtYen(yen) {
  * @param {{ age: number, assets: number }[]} mainSeries  — user's projected series
  * @param {{ targetAmount: number, retireAge: number, expectedReturn: number, events?: Array<{age: number, label?: string, amount: number}> }} params
  * @param {Chart|null|undefined} existingChart — previous Chart instance to destroy first
+ * @param {{ label: string, series: { age: number, assets: number }[] }|null} [compare] — 保存プラン比較線
  * @returns {Chart}
  */
-export function renderChart(canvas, mainSeries, params, existingChart) {
+export function renderChart(canvas, mainSeries, params, existingChart, compare = null) {
   if (existingChart) existingChart.destroy();
 
   const labels  = mainSeries.map((p) => p.age);
   const mainData = mainSeries.map((p) => p.assets);
+
+  // 比較線は年齢で対応付ける（保存時と年齢設定が違ってもズレないように）
+  const compareByAge = compare ? new Map(compare.series.map((p) => [p.age, p.assets])) : null;
+  const compareData = compareByAge ? labels.map((age) => compareByAge.get(age) ?? null) : null;
 
   // --- highlighted points: retirement (orange) + life events (green) ---
   const retirementIdx = mainSeries.findIndex((p) => p.age === params.retireAge);
@@ -124,6 +129,21 @@ export function renderChart(canvas, mainSeries, params, existingChart) {
           fill:        false,
           tension:     0,
         },
+        // 3. 保存プランの比較線（あるときだけ）
+        ...(compareData
+          ? [
+              {
+                label:       compare.label,
+                data:        compareData,
+                borderColor: '#b08bbb',
+                borderWidth: 2,
+                borderDash:  [4, 4],
+                pointRadius: 0,
+                fill:        false,
+                tension:     0.3,
+              },
+            ]
+          : []),
       ],
     },
     plugins: [goalBadge],

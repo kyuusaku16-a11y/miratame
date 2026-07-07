@@ -20,7 +20,6 @@ import {
   monthOf,
 } from './history.js';
 import { seasonalMessage } from './seasonal.js';
-import { buildRecordIcs } from './calendar.js';
 import { UPDATES, NOTE_ARTICLES } from './updates.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
@@ -816,7 +815,6 @@ function init() {
   $('recordDoBtn').addEventListener('click', doRecord);
   $('recordCancelBtn').addEventListener('click', () => $('recordDialog').close());
   $('recordDoneBtn').addEventListener('click', () => $('recordDialog').close());
-  $('calendarBtn').addEventListener('click', downloadRecordCalendar);
   $('saveScenarioBtn').addEventListener('click', saveCurrentScenario);
   renderScenarios();
 
@@ -972,16 +970,6 @@ function doRecord() {
   }
   $('recordFormZone').hidden = true;
   $('recordResultZone').hidden = false;
-}
-
-function downloadRecordCalendar() {
-  trackEvent('calendar');
-  const blob = new Blob([buildRecordIcs()], { type: 'text/calendar' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'マネービジョン記録日.ics';
-  a.click();
-  URL.revokeObjectURL(a.href);
 }
 
 // データの引っ越し（書き出し/読み込み。ファイルは端末内で完結）

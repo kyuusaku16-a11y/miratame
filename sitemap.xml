@@ -55,4 +55,19 @@
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://kyuusaku16-a11y.github.io/money-vision/columns/hajimete-100man.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://kyuusaku16-a11y.github.io/money-vision/columns/tedori-tsukaikata.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://kyuusaku16-a11y.github.io/money-vision/columns/hitorigurashi.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>

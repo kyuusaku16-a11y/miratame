@@ -786,6 +786,38 @@ header .tagline { font-size: 13px; }
 .column-item strong { display: block; font-family: var(--font-display); color: var(--color-primary-deep); margin-bottom: 4px; }
 .column-item span { font-size: 13px; line-height: 1.7; }
 
+/* ちかい目標モード: プリセットチップとグラフのモード切替 */
+.goal-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.goal-presets button {
+  border: 1px dashed var(--color-primary);
+  background: none;
+  color: var(--color-primary-deep);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.goal-presets button:hover { background: var(--color-good-bg); }
+.view-toggle { display: flex; justify-content: center; gap: 6px; padding: 10px 0 4px; }
+.view-toggle button {
+  border: 1.5px solid var(--color-line);
+  background: var(--color-panel);
+  color: var(--color-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+}
+.view-toggle button.active {
+  background: linear-gradient(135deg, #f0a3b4, #e58aa0);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
 /* シナリオ保存・くらべる */
 .scenario-row { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
 .scenario-save { border: 1px dashed #b08bbb; background: none; color: #7d5f88; border-radius: 999px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: inherit; }

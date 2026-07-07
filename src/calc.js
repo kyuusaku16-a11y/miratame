@@ -138,3 +138,19 @@ export function deriveKpis(series, params) {
 
   return { currentAssets, finalAssets, targetAge, yearsToTarget, lifetimeAge, survivesToEnd };
 }
+
+// 「ちかい目標」モード用: 目標額に届くまでの月数（年次系列を月割りで補間した概算）。
+// 届かなければ null。すでに達成なら 0。
+export function monthsToTarget(series, targetAmount) {
+  if (!series.length) return null;
+  if (series[0].assets >= targetAmount) return 0;
+  for (let i = 1; i < series.length; i++) {
+    if (series[i].assets >= targetAmount) {
+      const prev = series[i - 1].assets;
+      const gain = series[i].assets - prev;
+      const frac = gain > 0 ? (targetAmount - prev) / gain : 1;
+      return (i - 1) * 12 + Math.ceil(frac * 12);
+    }
+  }
+  return null;
+}

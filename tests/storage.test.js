@@ -129,3 +129,8 @@ test('removeScenario: idで削除', () => {
   assert.equal(st2.scenarios.length, 1);
   assert.equal(st2.scenarios[0].name, 'b');
 });
+
+test('settings.viewMode: 既定は life・保存分は復元', () => {
+  assert.equal(normalizeState({}).settings.viewMode, 'life');
+  assert.equal(normalizeState({ settings: { viewMode: 'near' } }).settings.viewMode, 'near');
+});

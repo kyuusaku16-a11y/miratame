@@ -84,6 +84,8 @@
         <p class="field-note">※インフレ分を引いたあとの利回りです</p>
 
         <label>目標金額（万円）<input type="number" id="targetAmount" min="0" step="100" /></label>
+        <div class="goal-presets" id="goalPresets"></div>
+        <p class="field-note">※ちかい目標を選ぶと、グラフが5年表示に切り替わります</p>
 
         <p id="validationMsg" class="validation" hidden aria-live="polite"></p>
 
@@ -135,8 +137,8 @@
         <div class="kpis">
           <div class="kpi"><span class="kpi-icon icon-green" aria-hidden="true"><img src="assets/coins.png" alt="" /></span><div class="kpi-text"><span class="kpi-label">現在の資産</span><span class="kpi-value" id="kpi-current">-</span></div></div>
           <div class="kpi"><span class="kpi-icon icon-blue" aria-hidden="true"><img src="assets/sprout.png" alt="" /></span><div class="kpi-text"><span class="kpi-label" id="kpi-final-label">100歳時点の資産</span><span class="kpi-value" id="kpi-final">-</span></div></div>
-          <div class="kpi"><span class="kpi-icon icon-orange" aria-hidden="true"><img src="assets/rabbit-banzai.png" alt="" /></span><div class="kpi-text"><span class="kpi-label">目標到達まで</span><span class="kpi-value" id="kpi-target">-</span></div></div>
-          <div class="kpi hero"><span class="kpi-icon icon-yellow" aria-hidden="true"><img src="assets/rabbit-thumbs.png" alt="" /></span><div class="kpi-text"><span class="kpi-label">資産寿命</span><span class="kpi-value" id="kpi-lifetime">-</span></div></div>
+          <div class="kpi"><span class="kpi-icon icon-orange" aria-hidden="true"><img src="assets/rabbit-banzai.png" alt="" /></span><div class="kpi-text"><span class="kpi-label" id="kpi-target-label">目標到達まで</span><span class="kpi-value" id="kpi-target">-</span></div></div>
+          <div class="kpi hero"><span class="kpi-icon icon-yellow" aria-hidden="true"><img src="assets/rabbit-thumbs.png" alt="" /></span><div class="kpi-text"><span class="kpi-label" id="kpi-lifetime-label">資産寿命</span><span class="kpi-value" id="kpi-lifetime">-</span></div></div>
         </div>
 
         <div class="share-row">
@@ -180,6 +182,10 @@
         </dialog>
 
         <div class="panel chart-wrap">
+          <div class="view-toggle" role="group" aria-label="グラフの表示モード">
+            <button id="modeLife" type="button">🌳 人生プラン</button>
+            <button id="modeNear" type="button">🌱 ちかい目標（5年）</button>
+          </div>
           <div class="chart-box"><canvas id="chart"></canvas></div>
           <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は平均値で計算中（タップで変更）</button>
           <div class="scenario-row">
@@ -248,13 +254,12 @@
         <div class="panel reading" id="reading">
           <h2>📖 よみもの・お知らせ</h2>
           <ul class="reading-list" id="readingList">
+            <li><a href="columns/hajimete-100man.html">はじめての100万円の作り方 — 貯金ゼロからの現実的な道のり</a></li>
+            <li><a href="columns/tedori-tsukaikata.html">手取り20万円、どう分ける？ 世界一シンプルな家計のルール</a></li>
+            <li><a href="columns/hitorigurashi.html">一人暮らしのお金、最初の1年</a></li>
             <li><a href="columns/setsuyaku.html">節約が続かないのは、意志が弱いからじゃない</a></li>
             <li><a href="columns/nenkin.html">年金、実際いくらもらえるの？ 不安を数字に変える話</a></li>
-            <li><a href="columns/bonus.html">ボーナスの使い方に、正解はあるの？</a></li>
-            <li><a href="columns/nisa.html">NISAって結局なに？ 5分でわかる制度のきほん</a></li>
             <li><a href="columns/shisan-jumyo.html">「資産寿命」ってなに？ 貯蓄額より大事な数字の話</a></li>
-            <li><a href="columns/fukuri.html">複利のちから — 時間を味方につける、いちばん簡単な方法</a></li>
-            <li><a href="columns/kyoiku-hi.html">教育費、こわがりすぎなくていい話</a></li>
           </ul>
           <p class="reading-more"><a href="columns/">よみものをすべて見る →</a></p>
           <ul class="updates-list" id="updatesList"></ul>
@@ -265,7 +270,7 @@
     <!-- スマホ用: 入力中も資産寿命が見える固定バー（タップでグラフへ） -->
     <button id="lifetimeBar" class="lifetime-bar" type="button" hidden aria-label="資産寿命。タップでグラフへ移動">
       <img src="assets/rabbit-thumbs.png" alt="" aria-hidden="true" />
-      <span class="lb-label">資産寿命</span>
+      <span class="lb-label" id="lifetimeBarLabel">資産寿命</span>
       <span class="lb-value" id="lifetimeBarValue">-</span>
     </button>
 

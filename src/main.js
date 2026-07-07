@@ -1,4 +1,4 @@
-import { projectAssets, deriveKpis, educationCostAt, EDUCATION_COURSES } from './calc.js';
+import { projectAssets, deriveKpis, educationCostAt, monthsToTarget, EDUCATION_COURSES } from './calc.js';
 import { buildComments } from './comments.js';
 import { loadState, saveState, normalizeState, addScenario, removeScenario, DEFAULT_ADVANCED } from './storage.js';
 import { renderChart } from './chart.js';
@@ -104,16 +104,44 @@ function syncSliders() {
   }
 }
 
-function renderKpis(kpis, params) {
+// 「ちかい目標」の残り期間の言い方（月精度）
+function nearGoalText(months) {
+  if (months === null) return 'いまの計画では\n未到達';
+  if (months === 0) return '達成ずみ🎉';
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  if (y === 0) return `あと${m}ヶ月🎉`;
+  return m === 0 ? `あと${y}年ちょうど` : `あと${y}年${m}ヶ月`;
+}
+
+function renderKpis(kpis, params, { near = false, assets5y = null, goalMonths = null } = {}) {
   $('kpi-current').textContent = fmtMoney(kpis.currentAssets);
+  const life = $('kpi-lifetime');
+  const bar = $('lifetimeBarValue');
+  if (near) {
+    // ちかい目標モード: 5年スケールのKPIに差し替え（資産寿命は出さない）
+    $('kpi-final-label').textContent = '5年後の資産';
+    $('kpi-final').textContent = fmtMoney(assets5y ?? kpis.finalAssets);
+    $('kpi-target-label').textContent = '毎月のつみたて';
+    $('kpi-target').textContent = `${yenToMan(params.monthlyInvest)}万円`;
+    $('kpi-lifetime-label').textContent = '目標まで';
+    life.textContent = nearGoalText(goalMonths);
+    life.classList.toggle('warn', goalMonths === null);
+    $('lifetimeBarLabel').textContent = '目標まで';
+    bar.textContent = life.textContent.replace('\n', '');
+    bar.classList.toggle('warn', goalMonths === null);
+    return;
+  }
   $('kpi-final-label').textContent = `${params.endAge}歳時点の資産`;
   $('kpi-final').textContent = fmtMoney(kpis.finalAssets);
+  $('kpi-target-label').textContent = '目標到達まで';
+  $('kpi-lifetime-label').textContent = '資産寿命';
+  $('lifetimeBarLabel').textContent = '資産寿命';
   // 改行位置は \n で明示（.kpi-value は white-space: pre-line。単語の途中で折れないように）
   $('kpi-target').textContent =
     kpis.yearsToTarget === null
       ? `${params.endAge}歳までに\n未到達`
       : `あと${kpis.yearsToTarget}年\n（${kpis.targetAge}歳）`;
-  const life = $('kpi-lifetime');
   life.textContent = kpis.survivesToEnd
     ? `${params.endAge}歳まで\n安心圏`
     : kpis.lifetimeAge === null
@@ -121,7 +149,6 @@ function renderKpis(kpis, params) {
       : `約${kpis.lifetimeAge}歳まで`;
   life.classList.toggle('warn', !kpis.survivesToEnd);
   // スマホの固定バーにも同じ値を（こちらは1行で）
-  const bar = $('lifetimeBarValue');
   bar.textContent = life.textContent.replace('\n', '');
   bar.classList.toggle('warn', !kpis.survivesToEnd);
 }
@@ -622,8 +649,13 @@ function update({ withReaction = false, light = false } = {}) {
   const mainSeries = projectAssets(params, params.expectedReturn / 100);
 
   const kpis = deriveKpis(mainSeries, params);
+  const near = state.settings.viewMode === 'near';
   withScrollAnchor(() => {
-    renderKpis(kpis, params);
+    renderKpis(kpis, params, {
+      near,
+      assets5y: mainSeries[5]?.assets ?? null,
+      goalMonths: near ? monthsToTarget(mainSeries, params.targetAmount) : null,
+    });
     renderValidation(deriveValidation(params));
     renderAdvancedSummary();
     if (!light) {
@@ -657,7 +689,9 @@ function update({ withReaction = false, light = false } = {}) {
   } else {
     $('scenarioMsg').hidden = true;
   }
-  chart = renderChart($('chart'), mainSeries, params, chart, compare);
+  // ちかい目標モードはグラフを5年分だけに
+  const chartSeries = near ? mainSeries.slice(0, 6) : mainSeries;
+  chart = renderChart($('chart'), chartSeries, params, chart, compare);
 }
 
 // 資産寿命の短い言い方（シナリオ比較用）
@@ -819,6 +853,11 @@ function init() {
     $('schedule').classList.toggle('collapsed');
   });
 
+  renderGoalPresets();
+  $('modeLife').addEventListener('click', () => setViewMode('life'));
+  $('modeNear').addEventListener('click', () => setViewMode('near'));
+  syncModeButtons();
+
   renderStamps();
   $('stampBtn').addEventListener('click', pressStamp);
   $('recordBtn').addEventListener('click', openRecordDialog);
@@ -884,6 +923,10 @@ function init() {
 
   // 図鑑ページの「診断する」リンクから来たら、すぐ結果を見せる
   if (new URLSearchParams(location.search).has('diagnose')) openShareDialog();
+  // コラム等の「◯◯モードで計算」リンク（?goal=first100 など）
+  const goalId = new URLSearchParams(location.search).get('goal');
+  const goalPreset = GOAL_PRESETS.find((g) => g.id === goalId);
+  if (goalPreset) applyGoalPreset(goalPreset);
 }
 
 // 感想・要望フォームのURL（用意できたらここに貼るだけでフッターに現れる）
@@ -896,6 +939,44 @@ function trackEvent(name) {
     window.goatcounter?.count?.({ path: name, title: name, event: true });
   } catch {
     /* 解析が使えなくても機能には影響させない */
+  }
+}
+
+// ちかい目標モード（若い層向け）: プリセット＋5年スケール表示
+const GOAL_PRESETS = [
+  { id: 'first100', label: '🌰 はじめの100万', man: 100 },
+  { id: 'hitori', label: '🏠 一人暮らし資金', man: 50 },
+  { id: 'tabi', label: '✈️ 旅・留学', man: 80 },
+  { id: 'kekkon', label: '💍 結婚・将来資金', man: 300 },
+];
+
+function syncModeButtons() {
+  const near = state.settings.viewMode === 'near';
+  $('modeNear').classList.toggle('active', near);
+  $('modeLife').classList.toggle('active', !near);
+}
+
+function setViewMode(mode) {
+  state.settings.viewMode = mode;
+  saveState(state);
+  syncModeButtons();
+  update();
+}
+
+function applyGoalPreset(preset) {
+  trackEvent(`goal-${preset.id}`);
+  $('targetAmount').value = preset.man;
+  setViewMode('near');
+}
+
+function renderGoalPresets() {
+  const box = $('goalPresets');
+  for (const preset of GOAL_PRESETS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = preset.label;
+    b.addEventListener('click', () => applyGoalPreset(preset));
+    box.appendChild(b);
   }
 }
 

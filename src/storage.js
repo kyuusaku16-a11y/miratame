@@ -38,7 +38,7 @@ export const DEFAULT_STATE = deepFreeze({
   advanced: { ...DEFAULT_ADVANCED },
   events: [],
   children: [],
-  settings: { themeId: 'sprout' },
+  settings: { themeId: 'sprout', viewMode: 'life' },
   scenarios: [],
 });
 
@@ -49,7 +49,7 @@ function freshDefault() {
     advanced: { ...DEFAULT_ADVANCED },
     events: [],
     children: [],
-    settings: { themeId: 'sprout' },
+    settings: { themeId: 'sprout', viewMode: 'life' },
     scenarios: [],
   };
 }
@@ -63,7 +63,7 @@ export function normalizeState(p) {
     advanced: { ...DEFAULT_ADVANCED, ...(p.advanced || {}) },
     events: Array.isArray(p.events) ? p.events : [],
     children: Array.isArray(p.children) ? p.children : [],
-    settings: { themeId: 'sprout', ...(p.settings || {}) },
+    settings: { themeId: 'sprout', viewMode: 'life', ...(p.settings || {}) },
     scenarios: Array.isArray(p.scenarios) ? p.scenarios : [],
   };
 }

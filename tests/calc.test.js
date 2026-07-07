@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { projectAssets, deriveKpis, educationCostAt } from '../src/calc.js';
+import { projectAssets, deriveKpis, educationCostAt, monthsToTarget } from '../src/calc.js';
 
 const base = {
   currentAge: 35,
@@ -332,4 +332,21 @@ test('projectAssets: loanMonthly 0（未入力）は従来挙動と完全一致'
     projectAssets({ ...base, loanMonthly: 0, loanEndAge: 65 }, 0.05),
     projectAssets(base, 0.05),
   );
+});
+
+test('monthsToTarget: 年次の系列から達成までの月数を補間で出す', () => {
+  // 資産 60万→84万→108万 と年24万ペース、目標100万
+  const series = [
+    { age: 25, assets: 600000 },
+    { age: 26, assets: 840000 },
+    { age: 27, assets: 1080000 },
+  ];
+  // 2年目の途中 (100-84)/(108-84)=0.67 → 8ヶ月 → 合計 1年+8ヶ月 = 20ヶ月
+  assert.equal(monthsToTarget(series, 1000000), 20);
+  // 最初から達成していれば 0
+  assert.equal(monthsToTarget(series, 500000), 0);
+  // 届かなければ null
+  assert.equal(monthsToTarget(series, 99999999), null);
+  // ちょうど年境で達成
+  assert.equal(monthsToTarget(series, 840000), 12);
 });

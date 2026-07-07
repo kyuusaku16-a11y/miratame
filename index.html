@@ -80,6 +80,11 @@
           <label>年金開始年齢（歳）<input type="number" id="pensionStartAge" min="60" max="75" /></label>
           <label>退職金（万円）<input type="number" id="retirementBonus" min="0" step="100" /></label>
           <label>老後の支出（現役の％）<input type="number" id="retiredExpenseRatio" min="30" max="100" step="5" /></label>
+          <h3>住まいのこと</h3>
+          <label>月々のローン返済（万円）<input type="number" id="loanMonthly" min="0" step="1" /></label>
+          <label>完済年齢（歳）<input type="number" id="loanEndAge" min="30" max="90" /></label>
+          <p class="field-note">※返済額は「年間支出」に含めて入力してください。完済後は自動で軽くなります</p>
+          <p class="field-note">※賃貸の方は0のままでOK（家賃はずっと続く支出として扱われます）</p>
           <h3>シミュレーション設定</h3>
           <label>終了年齢（歳）
             <select id="endAge">

@@ -27,6 +27,8 @@ export const DEFAULT_ADVANCED = deepFreeze({
   retirementBonus: 0,
   retiredExpenseRatio: 0.7,
   endAge: 100,
+  loanMonthly: 0, // 住宅ローンの月々返済（未入力=0。返済額は年間支出に含めて入力する前提）
+  loanEndAge: 65,
 });
 
 // 保存データ構造（仕様§8）

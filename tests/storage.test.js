@@ -68,3 +68,8 @@ test('loadState: children を配列に正規化・保存分を復元する', () 
   s.setItem('money-vision-state', JSON.stringify({ children: 'broken' }));
   assert.deepEqual(loadState(s).children, []);
 });
+
+test('DEFAULT_ADVANCED: 住宅ローンの既定値（未入力=0円・65歳）を持つ', () => {
+  assert.equal(DEFAULT_ADVANCED.loanMonthly, 0);
+  assert.equal(DEFAULT_ADVANCED.loanEndAge, 65);
+});

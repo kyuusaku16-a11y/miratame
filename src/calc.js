@@ -37,10 +37,15 @@ export function projectAssets(params, rate) {
     currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
     annualExpense, retireAge, pensionAnnual, pensionStartAge,
     retirementBonus, retiredExpenseRatio, endAge, events = [], children = [],
+    loanMonthly = 0, loanEndAge = 0,
   } = params;
 
   const annualInvest = monthlyInvest * 12;
-  const retiredExpense = annualExpense * retiredExpenseRatio;
+  // 住宅ローン: 返済額は年間支出に含まれている前提（差分方式）。
+  // ローンは退職しても減らない固定費なので 70%換算の対象外にし、
+  // 老後支出 = (支出−ローン)×比率 + ローン(完済まで) として扱う。
+  const loanAnnual = Math.min(Math.max(0, loanMonthly) * 12, annualExpense);
+  const retiredExpense = (annualExpense - loanAnnual) * retiredExpenseRatio;
 
   let invested = investedAsset;
   let cash = totalAsset - investedAsset;
@@ -73,15 +78,19 @@ export function projectAssets(params, rate) {
       eduDelta += educationCostAt(children[ci].age + (age - currentAge), children[ci].course) - currentEduCosts[ci];
     }
 
+    // この年に払うローン（完済年齢以降は0）
+    const loanThisYear = loanAnnual > 0 && age < loanEndAge ? loanAnnual : 0;
+
     if (age < retireAge) {
-      // 現役: 投資に利回り+積立、現金に収支余剰（教育費差分を控除）
+      // 現役: 投資に利回り+積立、現金に収支余剰（教育費差分を控除）。
+      // 支出にはローン込みなので、完済後はその分を戻す
       invested = invested * (1 + rate) + annualInvest;
-      cash = cash + (annualIncome - annualExpense - annualInvest) - eduDelta;
+      cash = cash + (annualIncome - annualExpense - annualInvest) - eduDelta + (loanAnnual - loanThisYear);
     } else {
-      // 退職後: 投資は利回りのみ、現金は年金-老後支出（教育費差分は70%換算の対象外）
+      // 退職後: 投資は利回りのみ、現金は年金-老後支出（教育費差分・ローンは70%換算の対象外）
       invested = invested * (1 + rate);
       const pension = age >= pensionStartAge ? pensionAnnual : 0;
-      cash = cash + (pension - retiredExpense) - eduDelta;
+      cash = cash + (pension - retiredExpense - loanThisYear) - eduDelta;
     }
 
     // 退職年齢の年に退職金を現金へ一括加算

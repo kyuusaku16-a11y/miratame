@@ -24,6 +24,8 @@ const FIELDS = [
   { id: 'pensionStartAge', section: 'advanced', unit: 'raw' },
   { id: 'retirementBonus', section: 'advanced', unit: 'man' },
   { id: 'retiredExpenseRatio', section: 'advanced', unit: 'pct100' },
+  { id: 'loanMonthly', section: 'advanced', unit: 'man' },
+  { id: 'loanEndAge', section: 'advanced', unit: 'raw' },
   { id: 'endAge', section: 'advanced', unit: 'raw' },
 ];
 
@@ -318,9 +320,16 @@ function renderSchedule(rows) {
     children.length > 0 && eduTotal > 0
       ? { cls: 'edu registered', iconImg: 'assets/grad-cap.png', title: '教育費', sub: `お子さま${children.length}人 登録済み`, amount: `これから 合計 約${fmtMoney(eduTotal)}`, btn: '内訳を見る', onClick: openTimeline }
       : { cls: 'edu', iconImg: 'assets/grad-cap.png', title: '教育費', sub: 'お子さま1人あたりの目安', amount: '約 1,000〜1,500万円', btn: '＋ 子どもを追加', onClick: () => jumpTo('addChild') },
-    homeEvents.length > 0
-      ? { cls: 'home registered', iconImg: 'assets/house.png', title: '住まいの費用', sub: eventLabel(homeEvents), amount: `合計 約${fmtMoney(sumOf(homeEvents))}`, btn: '編集する', onClick: () => jumpTo('addEvent') }
-      : { cls: 'home', iconImg: 'assets/house.png', title: '住まいの費用', sub: '購入・建て替えなどの目安', amount: '約 2,000〜4,000万円', btn: '＋ 追加する', onClick: () => jumpTo('addEvent') },
+    (() => {
+      const loan = state.advanced.loanMonthly;
+      if (homeEvents.length > 0) {
+        return { cls: 'home registered', iconImg: 'assets/house.png', title: '住まいの費用', sub: eventLabel(homeEvents), amount: `合計 約${fmtMoney(sumOf(homeEvents))}`, btn: '編集する', onClick: () => jumpTo('addEvent') };
+      }
+      if (loan > 0) {
+        return { cls: 'home registered', iconImg: 'assets/house.png', title: '住まいの費用', sub: `ローン返済 月${fmtMoney(loan)}`, amount: `${state.advanced.loanEndAge}歳で完済予定`, btn: '編集する', onClick: () => jumpTo('loanMonthly') };
+      }
+      return { cls: 'home', iconImg: 'assets/house.png', title: '住まいの費用', sub: '購入・建て替えなどの目安', amount: '約 2,000〜4,000万円', btn: '＋ 追加する', onClick: () => jumpTo('addEvent') };
+    })(),
     otherEvents.length > 0
       ? { cls: 'other registered', iconImg: 'assets/bag.png', title: 'その他の大型支出', sub: eventLabel(otherEvents), amount: `合計 約${fmtMoney(sumOf(otherEvents))}`, btn: '編集する', onClick: () => jumpTo('addEvent') }
       : { cls: 'other', iconImg: 'assets/bag.png', title: 'その他の大型支出', sub: '車の買替え・介護費用など', amount: '数百〜数千万円', btn: '＋ 追加する', onClick: () => jumpTo('addEvent') },

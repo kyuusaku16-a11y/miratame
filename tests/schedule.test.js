@@ -65,3 +65,11 @@ test('buildSchedule: 進路コースが大学費用の行に反映される', ()
   const univ = rows.find((r) => r.items.some((t) => t.includes('大学入学')));
   assert.ok(univ.items[0].includes('年250万'));
 });
+
+test('buildSchedule: 住宅ローン完済の行が出る（未入力なら出ない）', () => {
+  const rows = buildSchedule({ ...base, loanMonthly: 100000, loanEndAge: 50 }, 2026);
+  const r = rows.find((x) => x.items.some((t) => t.includes('住宅ローン完済')));
+  assert.ok(r && r.year === 2041 && r.age === 50);
+  assert.ok(r.items[0].includes('月−10万'));
+  assert.deepEqual(buildSchedule(base, 2026), []);
+});

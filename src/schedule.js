@@ -43,6 +43,12 @@ export function buildSchedule(params, currentYear = new Date().getFullYear()) {
     entries.push({ age: ev.age, text: `${ev.label || 'イベント'} ${man(ev.amount)}円` });
   }
 
+  // 住宅ローン完済（以後、毎月の返済ぶんが軽くなる節目）
+  const { loanMonthly = 0, loanEndAge = 0 } = params;
+  if (loanMonthly > 0 && loanEndAge > currentAge && loanEndAge <= endAge) {
+    entries.push({ age: loanEndAge, text: `住宅ローン完済（月−${man(loanMonthly)}）` });
+  }
+
   // 年齢順に並べ、同じ年（＝同じ年齢）の項目は1行にまとめる
   entries.sort((a, b) => a.age - b.age);
   const rows = [];

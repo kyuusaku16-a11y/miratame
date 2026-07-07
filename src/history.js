@@ -18,14 +18,7 @@ export function loadHistory(storage = globalThis.localStorage) {
   }
 }
 
-export function recordSnapshot(kpis, storage = globalThis.localStorage, ym = monthOf()) {
-  const hist = loadHistory(storage).filter((s) => s.ym !== ym);
-  hist.push({
-    ym,
-    lifetimeAge: kpis.lifetimeAge,
-    survivesToEnd: kpis.survivesToEnd,
-    targetAge: kpis.targetAge,
-  });
+function saveHistory(hist, storage) {
   hist.sort((a, b) => (a.ym < b.ym ? -1 : 1));
   const trimmed = hist.slice(-KEEP_MONTHS);
   try {
@@ -34,6 +27,67 @@ export function recordSnapshot(kpis, storage = globalThis.localStorage, ym = mon
     /* localStorage 使用不可でも無視 */
   }
   return trimmed;
+}
+
+export function recordSnapshot(kpis, storage = globalThis.localStorage, ym = monthOf()) {
+  const hist = loadHistory(storage);
+  const existing = hist.find((s) => s.ym === ym) ?? {};
+  const rest = hist.filter((s) => s.ym !== ym);
+  // 同月上書きでも「今月の記録」（recordedAsset 等）は消さない
+  rest.push({
+    ...existing,
+    ym,
+    lifetimeAge: kpis.lifetimeAge,
+    survivesToEnd: kpis.survivesToEnd,
+    targetAge: kpis.targetAge,
+  });
+  return saveHistory(rest, storage);
+}
+
+// 「今月の資産を記録する」ボタン（実績記録）。projected1y は記録時点の計画上の1年後資産
+export function markRecorded(storage = globalThis.localStorage, { totalAsset, projected1y }, ym = monthOf()) {
+  const hist = loadHistory(storage);
+  const existing = hist.find((s) => s.ym === ym) ?? { ym };
+  const rest = hist.filter((s) => s.ym !== ym);
+  rest.push({ ...existing, ym, recordedAsset: totalAsset, projected1y });
+  return saveHistory(rest, storage);
+}
+
+const ymToNum = (ym) => {
+  const [y, m] = ym.split('-').map(Number);
+  return y * 12 + (m - 1);
+};
+
+// 今月から途切れず記録し続けている月数
+export function recordStreak(history, ym = monthOf()) {
+  const recorded = new Set(history.filter((s) => s.recordedAsset != null).map((s) => ymToNum(s.ym)));
+  let n = 0;
+  let cur = ymToNum(ym);
+  while (recorded.has(cur)) {
+    n++;
+    cur--;
+  }
+  return n;
+}
+
+// 指定月より前の、いちばん新しい記録済みエントリ
+export function latestRecordBefore(history, ym = monthOf()) {
+  const prior = history.filter((s) => s.ym < ym && s.recordedAsset != null);
+  return prior.length ? prior[prior.length - 1] : null;
+}
+
+// 前回の記録時に立てた計画（projected1y）を月割りにして、実績と比べる
+export function buildProgressText(prev, curr) {
+  if (!prev || prev.recordedAsset == null || prev.projected1y == null || curr?.recordedAsset == null) {
+    return null;
+  }
+  const gap = ymToNum(curr.ym) - ymToNum(prev.ym);
+  if (gap <= 0) return null;
+  const expected = prev.recordedAsset + ((prev.projected1y - prev.recordedAsset) * gap) / 12;
+  const diffMan = Math.round((curr.recordedAsset - expected) / 10000);
+  if (Math.abs(diffMan) < 1) return { type: 'improved', text: 'ほぼ予定どおり！いいペースだよ🌱' };
+  if (diffMan > 0) return { type: 'improved', text: `予定より約${diffMan}万円さきを進んでるよ🌱` };
+  return { type: 'gentle', text: `予定より約${-diffMan}万円ゆっくりペース。あせらずいこう` };
 }
 
 // 今月分を除いた、いちばん新しい記録

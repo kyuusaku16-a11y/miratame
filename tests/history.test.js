@@ -6,6 +6,10 @@ import {
   recordSnapshot,
   previousSnapshot,
   buildWelcomeBack,
+  markRecorded,
+  recordStreak,
+  latestRecordBefore,
+  buildProgressText,
 } from '../src/history.js';
 
 function fakeStorage() {
@@ -95,4 +99,73 @@ test('buildWelcomeBack: 変化なしはキープを褒める', () => {
   assert.equal(same.type, 'improved');
   const bothOk = buildWelcomeBack({ ym: '2026-06', lifetimeAge: null, survivesToEnd: true }, kpis(null, true));
   assert.equal(bothOk.type, 'improved');
+});
+
+// ---- 実績記録（毎月の資産きろく） ----
+
+test('recordSnapshot: 同月上書きでも記録済みフィールドは保持する', () => {
+  const s = fakeStorage();
+  recordSnapshot(kpis(80, false), s, '2026-07');
+  markRecorded(s, { totalAsset: 5000000, projected1y: 5600000 }, '2026-07');
+  recordSnapshot(kpis(82, false), s, '2026-07'); // 自動スナップショットで上書き
+  const h = loadHistory(s);
+  assert.equal(h[0].lifetimeAge, 82);
+  assert.equal(h[0].recordedAsset, 5000000);
+  assert.equal(h[0].projected1y, 5600000);
+});
+
+test('markRecorded: その月のエントリが無ければ作る', () => {
+  const s = fakeStorage();
+  markRecorded(s, { totalAsset: 3000000, projected1y: 3300000 }, '2026-07');
+  const h = loadHistory(s);
+  assert.equal(h.length, 1);
+  assert.equal(h[0].ym, '2026-07');
+  assert.equal(h[0].recordedAsset, 3000000);
+});
+
+test('recordStreak: 今月から連続して記録した月数を数える', () => {
+  const mk = (ym, rec) => (rec ? { ym, recordedAsset: 1 } : { ym });
+  assert.equal(recordStreak([mk('2026-05', true), mk('2026-06', true), mk('2026-07', true)], '2026-07'), 3);
+  assert.equal(recordStreak([mk('2026-04', true), mk('2026-06', true), mk('2026-07', true)], '2026-07'), 2); // 5月が抜け
+  assert.equal(recordStreak([mk('2026-07', false)], '2026-07'), 0);
+  assert.equal(recordStreak([], '2026-07'), 0);
+  // 年またぎ
+  assert.equal(recordStreak([mk('2025-12', true), mk('2026-01', true)], '2026-01'), 2);
+});
+
+test('latestRecordBefore: 今月より前の直近の記録済みエントリ', () => {
+  const h = [
+    { ym: '2026-04', recordedAsset: 100 },
+    { ym: '2026-05' },
+    { ym: '2026-06', recordedAsset: 200 },
+    { ym: '2026-07', recordedAsset: 300 },
+  ];
+  assert.equal(latestRecordBefore(h, '2026-07').ym, '2026-06');
+  assert.equal(latestRecordBefore(h, '2026-05').ym, '2026-04');
+  assert.equal(latestRecordBefore([], '2026-07'), null);
+});
+
+test('buildProgressText: 予定との差を万円で伝える（前向きな文言）', () => {
+  const prev = { ym: '2026-06', recordedAsset: 5000000, projected1y: 6200000 }; // 月あたり+10万の計画
+  // 1ヶ月後: 予定510万 → 実績530万 = +20万
+  const ahead = buildProgressText(prev, { ym: '2026-07', recordedAsset: 5300000 });
+  assert.equal(ahead.type, 'improved');
+  assert.ok(ahead.text.includes('20万円'));
+  // 実績495万 = -15万（責めない文言）
+  const behind = buildProgressText(prev, { ym: '2026-07', recordedAsset: 4950000 });
+  assert.equal(behind.type, 'gentle');
+  assert.ok(behind.text.includes('15万円'));
+  assert.ok(!behind.text.includes('遅れ'));
+  // ±1万未満はほぼ予定どおり
+  const onTrack = buildProgressText(prev, { ym: '2026-07', recordedAsset: 5100000 });
+  assert.ok(onTrack.text.includes('予定どおり'));
+});
+
+test('buildProgressText: 数ヶ月あいても月割りで比較・データ不足はnull', () => {
+  const prev = { ym: '2026-01', recordedAsset: 5000000, projected1y: 6200000 };
+  // 6ヶ月後: 予定560万 → 実績560万
+  const ok = buildProgressText(prev, { ym: '2026-07', recordedAsset: 5600000 });
+  assert.ok(ok.text.includes('予定どおり'));
+  assert.equal(buildProgressText(null, { ym: '2026-07', recordedAsset: 1 }), null);
+  assert.equal(buildProgressText({ ym: '2026-06', recordedAsset: 5000000 }, { ym: '2026-07', recordedAsset: 1 }), null); // projected1y なし
 });

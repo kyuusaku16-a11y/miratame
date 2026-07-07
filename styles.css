@@ -741,6 +741,39 @@ header .tagline { font-size: 13px; }
   .diagnosis-hero .dh-text { flex-basis: 100%; align-items: center; }
 }
 
+/* 毎月のきろく（実績記録） */
+.track { margin-top: 16px; }
+.track-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.track-head img { height: 44px; width: auto; object-fit: contain; }
+.track-head h2 { margin: 0; font-size: 17px; font-family: var(--font-display); color: var(--color-ink); }
+.track-status { margin: 4px 0 10px; font-size: 14px; }
+.track-bars { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin: 0 0 10px; }
+.track-bars[hidden] { display: none; }
+.track-bar { width: 12px; background: var(--color-primary); border-radius: 4px 4px 0 0; opacity: 0.85; }
+.track-bar:last-child { background: var(--color-primary-deep); opacity: 1; }
+.track-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.track-actions button {
+  border: none;
+  background: linear-gradient(135deg, #f0a3b4, #e58aa0);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.track-actions button.track-ghost {
+  background: var(--color-panel);
+  color: var(--color-primary-deep);
+  border: 1.5px solid var(--color-primary);
+}
+.track-actions button:hover { filter: brightness(1.05); }
+.pwa-hint { display: flex; align-items: center; gap: 8px; background: var(--color-info-bg); color: var(--color-info-ink); border-radius: 10px; padding: 8px 10px; }
+.pwa-hint[hidden] { display: none; }
+.pwa-hint button { margin-left: auto; border: none; background: none; color: inherit; font-size: 16px; cursor: pointer; padding: 0 4px; }
+
 /* スマホ用の資産寿命固定バー（PCは非表示。KPIカードかグラフが見えている間も隠す） */
 .lifetime-bar { display: none; }
 @media (max-width: 720px) {

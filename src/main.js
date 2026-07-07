@@ -8,7 +8,19 @@ import { buildReaction } from './reactions.js';
 import { buildSchedule } from './schedule.js';
 import { buildShareText, renderShareCard } from './share.js';
 import { buildAdvice, buildNarrativeReport, findEducationPeak } from './advice.js';
-import { loadHistory, recordSnapshot, previousSnapshot, buildWelcomeBack } from './history.js';
+import {
+  loadHistory,
+  recordSnapshot,
+  previousSnapshot,
+  buildWelcomeBack,
+  markRecorded,
+  recordStreak,
+  latestRecordBefore,
+  buildProgressText,
+  monthOf,
+} from './history.js';
+import { seasonalMessage } from './seasonal.js';
+import { buildRecordIcs } from './calendar.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
 // （man=万円⇄円 / pct100=%⇄比率 / raw=そのまま）。
@@ -577,8 +589,8 @@ function renderReaction(reaction, duration = 4000) {
     box.hidden = true;
     return;
   }
-  // 改善は喜びうさぎ、ゆっくりペースはくまが寄り添う
-  $('reactionImg').src = reaction.type === 'improved' ? 'assets/rabbit-joy.png' : 'assets/bear.png';
+  // 改善は喜びうさぎ、ゆっくりペースはくまが寄り添う（img指定があればそちら優先）
+  $('reactionImg').src = reaction.img ?? (reaction.type === 'improved' ? 'assets/rabbit-joy.png' : 'assets/bear.png');
   $('reactionText').textContent = reaction.text;
   box.hidden = false;
   reactionTimer = setTimeout(() => {
@@ -726,12 +738,94 @@ function init() {
   barObserver.observe(document.querySelector('.kpis'));
   barObserver.observe(document.querySelector('.chart-wrap'));
 
+  $('recordBtn').addEventListener('click', recordThisMonth);
+  $('calendarBtn').addEventListener('click', downloadRecordCalendar);
+
+  // ホーム画面追加のヒント: 2回目以降の訪問・スマホ・ブラウザ表示のときだけ
+  let pwaHintDone = false;
+  try {
+    pwaHintDone = !!localStorage.getItem('mv-pwa-hint-done');
+  } catch {
+    /* ignore */
+  }
+  const inStandalone = matchMedia('(display-mode: standalone)').matches;
+  const onMobile = matchMedia('(max-width: 720px)').matches;
+  if (!firstVisit && onMobile && !inStandalone && !pwaHintDone) $('pwaHint').hidden = false;
+  $('pwaHintClose').addEventListener('click', () => {
+    try {
+      localStorage.setItem('mv-pwa-hint-done', '1');
+    } catch {
+      /* ignore */
+    }
+    $('pwaHint').hidden = true;
+  });
+
   // 「前回とくらべて」: 先月以前の記録を、update() が今月分を書く前に読んでおく
   const prevSnap = previousSnapshot(loadHistory());
 
   update();
+  renderTrack();
 
-  if (prevSnap && prevKpis) renderReaction(buildWelcomeBack(prevSnap, prevKpis), 8000);
+  // 声かけの優先順: 前回との比較 > 季節のひとこと
+  const welcome = prevSnap && prevKpis ? buildWelcomeBack(prevSnap, prevKpis) : null;
+  const seasonal = seasonalMessage();
+  if (welcome) renderReaction(welcome, 8000);
+  else if (seasonal) renderReaction({ type: 'improved', ...seasonal }, 8000);
+}
+
+// 毎月のきろく（実績記録）: 記録状況・連続月数・計画とのズレ・ミニバーを描く
+function renderTrack() {
+  const ymNow = monthOf();
+  const hist = loadHistory();
+  const cur = hist.find((s) => s.ym === ymNow);
+  const recorded = cur?.recordedAsset != null;
+  const streak = recordStreak(hist, ymNow);
+  const status = $('trackStatus');
+  if (recorded) {
+    const progress = buildProgressText(latestRecordBefore(hist, ymNow), cur);
+    let text = streak >= 2 ? `✅ 今月は記録ずみ（${streak}ヶ月連続🌱）` : '✅ 今月は記録ずみ';
+    if (progress) text += ` — ${progress.text}`;
+    status.textContent = text;
+    $('recordBtn').textContent = '📒 記録を更新する';
+  } else {
+    status.textContent =
+      streak === 0 && !latestRecordBefore(hist, ymNow)
+        ? '毎月1回、資産を記録してみよう。つづけるとグラフの答え合わせができるよ'
+        : 'まだ今月の記録がないよ。「現在の資産」を最新にして記録しよう';
+    $('recordBtn').textContent = '📒 今月の資産を記録する';
+  }
+  const bars = $('trackBars');
+  bars.textContent = '';
+  const recs = hist.filter((s) => s.recordedAsset != null).slice(-12);
+  const max = Math.max(...recs.map((r) => r.recordedAsset), 1);
+  for (const r of recs) {
+    const b = document.createElement('span');
+    b.className = 'track-bar';
+    b.style.height = `${Math.max(8, Math.round((r.recordedAsset / max) * 40))}px`;
+    b.title = r.ym;
+    bars.appendChild(b);
+  }
+  bars.hidden = recs.length < 2;
+}
+
+function recordThisMonth() {
+  const params = paramsOf(state);
+  const series = projectAssets(params, params.expectedReturn / 100);
+  markRecorded(globalThis.localStorage, {
+    totalAsset: params.totalAsset,
+    projected1y: series[1]?.assets ?? params.totalAsset,
+  });
+  renderTrack();
+  renderReaction({ type: 'improved', text: 'きろくしたよ！来月もいっしょに見よう🌱' }, 6000);
+}
+
+function downloadRecordCalendar() {
+  const blob = new Blob([buildRecordIcs()], { type: 'text/calendar' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'マネービジョン記録日.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // データの引っ越し（書き出し/読み込み。ファイルは端末内で完結）

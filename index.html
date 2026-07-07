@@ -13,6 +13,12 @@
     <meta property="og:image" content="https://kyuusaku16-a11y.github.io/money-vision/ogp.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="assets/sprout.png" />
+    <!-- PWA: ホーム画面に追加できるように（Service Workerは使わない=キャッシュ事故防止） -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#e8a0aa" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
@@ -150,6 +156,24 @@
         <div class="panel chart-wrap">
           <div class="chart-box"><canvas id="chart"></canvas></div>
           <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は平均値で計算中（タップで変更）</button>
+        </div>
+
+        <div class="panel track" id="track">
+          <div class="track-head">
+            <img src="assets/rabbit-book.png" alt="" aria-hidden="true" />
+            <h2>毎月のきろく</h2>
+          </div>
+          <p class="track-status" id="trackStatus"></p>
+          <div class="track-bars" id="trackBars" aria-hidden="true" hidden></div>
+          <div class="track-actions">
+            <button id="recordBtn" type="button">📒 今月の資産を記録する</button>
+            <button id="calendarBtn" type="button" class="track-ghost">📅 記録日をカレンダーに</button>
+          </div>
+          <p class="field-note">「現在の資産」を最新にして記録すると、計画とのズレを毎月お知らせします（数字は端末内のみ）</p>
+          <p class="field-note pwa-hint" id="pwaHint" hidden>
+            💡 このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
+            <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>
+          </p>
         </div>
 
         <div class="below-chart">

@@ -696,3 +696,19 @@ header .tagline { font-size: 13px; }
   .child-row { flex-wrap: wrap; }
   .child-row select.course { max-width: none; flex-basis: 100%; }
 }
+
+/* 結果シェアボタン */
+.share-row { display: flex; justify-content: flex-end; }
+.share-row button {
+  border: none;
+  background: linear-gradient(135deg, #f0a3b4, #e58aa0);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.share-row button:hover { filter: brightness(1.05); }

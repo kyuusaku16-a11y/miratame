@@ -6,6 +6,7 @@ import { fmtMoney, manToYen, yenToMan } from './format.js';
 import { deriveValidation } from './validation.js';
 import { buildReaction } from './reactions.js';
 import { buildSchedule } from './schedule.js';
+import { buildShareText, renderShareCard } from './share.js';
 import { buildAdvice, buildNarrativeReport, findEducationPeak } from './advice.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
@@ -641,8 +642,41 @@ function init() {
     update();
   });
   $('addEvent').addEventListener('click', () => addEventRow());
+  $('shareBtn').addEventListener('click', shareResult);
 
   update();
+}
+
+// 結果シェア: モバイルはネイティブ共有シート、PCは画像保存＋X投稿画面
+async function shareResult() {
+  const params = paramsOf(state);
+  const series = projectAssets(params, params.expectedReturn / 100);
+  const kpis = deriveKpis(series, params);
+  const text = buildShareText(kpis, params);
+  const url = 'https://kyuusaku16-a11y.github.io/money-vision/';
+
+  const canvas = await renderShareCard(kpis, params);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  const file = new File([blob], 'money-vision.png', { type: 'image/png' });
+
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text: `${text} ${url}` });
+      return;
+    } catch {
+      /* ユーザーキャンセル等はフォールバックへ */
+    }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'money-vision.png';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+    '_blank',
+    'noopener',
+  );
 }
 
 document.addEventListener('DOMContentLoaded', init);

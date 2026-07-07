@@ -274,8 +274,8 @@ footer p { margin: 2px 0; font-size: 11px; color: var(--color-muted); line-heigh
 
 /* 支出の予定表（同じ年は1行・罫線区切り） */
 .schedule { padding: 16px; }
-.schedule h2 { margin: 0 0 10px; font-size: 17px; font-family: var(--font-display); color: var(--color-ink); }
-.schedule h2::before { content: '🧸'; margin-right: 8px; }
+.schedule h2 { margin: 0 0 10px; font-size: 17px; font-family: var(--font-display); color: var(--color-ink); display: flex; align-items: center; gap: 8px; }
+.schedule h2 .schedule-icon { height: 40px; width: auto; object-fit: contain; }
 .expense-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .expense-card {
   min-width: 0;
@@ -648,8 +648,8 @@ header .char-img {
   /* ヘッダー: 帯はコンパクトに、挨拶（吹き出し＋小鳥）は非表示 */
   header { margin: 10px 12px 8px; padding: 10px 14px; min-height: 0; }
   .greeting { display: none; }
-  header .char-img { width: 60px; height: 46px; padding: 4px 6px; }
-  .brand-text h1 { font-size: 18px; }
+  header .char-img { width: 100px; height: 66px; padding: 0; }
+  .brand-text h1 { font-size: 20px; }
   header .tagline { font-size: 10px; }
 
   /* KPIカード: アイコンと文字を一回り小さく */

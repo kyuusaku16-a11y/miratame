@@ -59,3 +59,9 @@ test('buildSchedule: 範囲外イベント・22歳以上の子は行なし、空
 test('buildSchedule: children/events 未指定でも動く', () => {
   assert.deepEqual(buildSchedule({ currentAge: 35, endAge: 100 }, 2026), []);
 });
+
+test('buildSchedule: 進路コースが大学費用の行に反映される', () => {
+  const rows = buildSchedule({ ...base, children: [{ age: 5, course: 'private-science-away' }] }, 2026);
+  const univ = rows.find((r) => r.items.some((t) => t.includes('大学入学')));
+  assert.ok(univ.items[0].includes('年250万'));
+});

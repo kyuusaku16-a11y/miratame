@@ -1,4 +1,4 @@
-import { projectAssets, deriveKpis, educationCostAt, EDUCATION_COURSES } from './calc.js';
+import { projectAssets, deriveKpis, educationCostAt } from './calc.js';
 import { buildComments } from './comments.js';
 import { loadState, saveState, DEFAULT_ADVANCED } from './storage.js';
 import { renderChart } from './chart.js';
@@ -209,7 +209,7 @@ function buildGuidanceCards(params, series, comments, advice) {
   if (children.length > 0) {
     let eduTotal = 0;
     for (const c of children) {
-      for (let a = Math.max(0, c.age); a <= 21; a++) eduTotal += educationCostAt(a, c.course);
+      for (let a = Math.max(0, c.age); a <= 21; a++) eduTotal += educationCostAt(a);
     }
     if (eduTotal > 0) {
       const peak = findEducationPeak(params);
@@ -290,7 +290,7 @@ function renderSchedule(rows) {
   const children = state.children ?? [];
   let eduTotal = 0;
   for (const c of children) {
-    for (let a = Math.max(0, c.age); a <= 21; a++) eduTotal += educationCostAt(a, c.course);
+    for (let a = Math.max(0, c.age); a <= 21; a++) eduTotal += educationCostAt(a);
   }
   const HOME_WORDS = ['住', '家', '頭金', 'リフォーム', 'マンション', '引越', '引っ越'];
   const isHome = (ev) => HOME_WORDS.some((w) => (ev.label ?? '').includes(w));
@@ -429,22 +429,6 @@ function renderChildren() {
     const unit = document.createElement('span');
     unit.textContent = '歳';
 
-    // 進路コース（大学費用だけが変わる。既定=私立文系・自宅）
-    const course = document.createElement('select');
-    course.className = 'course';
-    course.setAttribute('aria-label', '進路コース');
-    for (const [value, def] of Object.entries(EDUCATION_COURSES)) {
-      const opt = document.createElement('option');
-      opt.value = value;
-      opt.textContent = def.label;
-      course.appendChild(opt);
-    }
-    course.value = child.course ?? 'private-arts';
-    course.addEventListener('input', () => {
-      child.course = course.value;
-      update();
-    });
-
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'event-del';
@@ -456,7 +440,7 @@ function renderChildren() {
       update();
     });
 
-    row.append(who, age, unit, course, del);
+    row.append(who, age, unit, del);
     list.appendChild(row);
   });
 }

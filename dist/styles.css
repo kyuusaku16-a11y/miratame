@@ -689,10 +689,3 @@ header .tagline { font-size: 13px; }
 
 /* 登録済みの支出カードは「あなたの数字」を強調 */
 .expense-card.registered .expense-amount { color: var(--color-primary-deep); font-weight: 700; }
-
-/* 進路コース選択（子どもの行） */
-.child-row select.course { padding: 6px 8px; border: 1px solid var(--color-line); border-radius: 8px; font-size: 12px; color: var(--color-ink); background: #fff; font-family: var(--font-body); max-width: 11em; }
-@media (max-width: 720px) {
-  .child-row { flex-wrap: wrap; }
-  .child-row select.course { max-width: none; flex-basis: 100%; }
-}

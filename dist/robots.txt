@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kyuusaku16-a11y.github.io/money-vision/sitemap.xml

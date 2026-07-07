@@ -195,24 +195,27 @@
             <h2>きろく帳</h2>
           </div>
 
-          <div class="stamps-head">
-            <span class="stamps-title">🌸 まいにちのスタンプ</span>
-            <span class="stamps-count" id="stampCount"></span>
+          <div class="track-body">
+            <div class="track-col">
+              <div class="stamps-head">
+                <span class="stamps-title">🌸 まいにちのスタンプ</span>
+                <span class="stamps-count" id="stampCount"></span>
+              </div>
+              <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
+              <button id="stampBtn" type="button">🌸 今日のスタンプを押す</button>
+              <p class="stamp-quote" id="stampQuote" hidden></p>
+            </div>
+            <div class="track-col track-monthly">
+              <div class="stamps-head">
+                <span class="stamps-title">📒 まいつきの資産チェック</span>
+              </div>
+              <p class="track-status" id="trackStatus"></p>
+              <div class="track-actions">
+                <button id="recordBtn" type="button">📒 今月の資産をチェック</button>
+              </div>
+              <p class="field-note">月に1回、いまの資産をきろくするだけ。ふえたか減ったか、毎月教えます（数字は端末内のみ）</p>
+            </div>
           </div>
-          <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
-          <button id="stampBtn" type="button">🌸 今日のスタンプを押す</button>
-          <p class="stamp-quote" id="stampQuote" hidden></p>
-
-          <hr class="track-hr" />
-
-          <div class="stamps-head">
-            <span class="stamps-title">📒 まいつきの資産チェック</span>
-          </div>
-          <p class="track-status" id="trackStatus"></p>
-          <div class="track-actions">
-            <button id="recordBtn" type="button">📒 今月の資産をチェック</button>
-          </div>
-          <p class="field-note">月に1回、いまの資産をきろくするだけ。ふえたか減ったか、毎月教えます（数字は端末内のみ）</p>
           <p class="field-note pwa-hint" id="pwaHint" hidden>
             💡 このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
             <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>

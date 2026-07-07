@@ -994,3 +994,26 @@ footer .footer-link { color: var(--color-primary-deep); }
   color: var(--color-muted);
   border: 1.5px solid var(--color-line);
 }
+
+/* スマホ: 支出カードは横長の行に（縦積み3枚×144pxの間延び対策。ファイル末尾で最優先） */
+@media (max-width: 720px) {
+  .expense-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title btn'
+      'sub btn'
+      'amount btn';
+    align-items: center;
+    text-align: left;
+    min-height: 0;
+    padding: 10px 12px;
+    column-gap: 10px;
+    row-gap: 2px;
+  }
+  .expense-card strong { grid-area: title; justify-content: flex-start; }
+  .expense-card .expense-sub { grid-area: sub; }
+  .expense-card .expense-amount { grid-area: amount; }
+  .expense-card button { grid-area: btn; margin-top: 0; white-space: nowrap; }
+  .expense-card strong img { width: 30px; height: 30px; }
+}

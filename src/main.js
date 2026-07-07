@@ -896,8 +896,9 @@ function trackEvent(name) {
 function renderStamps({ justAdded = false } = {}) {
   const now = new Date();
   const days = stampsThisMonth(globalThis.localStorage, now);
-  $('stampMonthLabel').textContent = `${now.getMonth() + 1}月`;
-  $('stampCount').textContent = days.length ? `今月 ${days.length}個` : '';
+  $('stampCount').textContent = days.length
+    ? `${now.getMonth() + 1}月 ${days.length}個`
+    : `${now.getMonth() + 1}月`;
   const row = $('stampsRow');
   row.textContent = '';
   for (const day of days) {

@@ -137,33 +137,125 @@ export function buildAdvice(params, series, kpis) {
     });
   }
 
-  // 💡次の一手: 別シナリオを実計算し、改善した場合だけ提案する
-  const tryVariant = (patch, describe) => {
-    const vParams = { ...params, ...patch };
-    const vKpis = deriveKpis(projectAssets(vParams, rate), vParams);
-    if (kpis.targetAge !== null && vKpis.targetAge !== null && vKpis.targetAge < kpis.targetAge) {
-      tips.push({ type: 'tip', title: '改善のヒント', text: `${describe}、目標到達が約${kpis.targetAge - vKpis.targetAge}年早まる計算です。` });
-      return;
+  // 💡次の一手: 逆算・比較・下振れ検査による分析（最大3件・改善しない提案は出さない）
+
+  // ① 逆算: 目標に届くために必要な毎月の上乗せ額
+  if (kpis.targetAge === null && rate > 0 && surplus > 0) {
+    const extra = solveExtraMonthlyInvest(params, rate);
+    if (extra !== null) {
+      const total = params.monthlyInvest + extra;
+      tips.push({
+        type: 'tip',
+        title: '改善のヒント',
+        text: `目標の${fmtMoney(params.targetAmount)}には、毎月あと約${fmtMoney(extra)}の積み立て（合計 約${fmtMoney(total)}/月）で届く計算です。`,
+      });
+    } else {
+      tips.push({
+        type: 'tip',
+        title: '改善のヒント',
+        text: '積み立ての上乗せだけでは目標に届きにくいプランです。支出の見直しや目標額・時期の調整を組み合わせるのが近道です。',
+      });
     }
-    if (kpis.targetAge === null && vKpis.targetAge !== null) {
-      tips.push({ type: 'tip', title: '改善のヒント', text: `${describe}、${vKpis.targetAge}歳ごろに目標へ届く計算になります。` });
-      return;
+  }
+
+  // ② 逆算: 終了年齢まで資産が持つ「生き残りライン」
+  if (!kpis.survivesToEnd) {
+    const cut = solveMonthlyExpenseCut(params, rate);
+    if (cut !== null) {
+      tips.push({
+        type: 'tip',
+        title: '改善のヒント',
+        text: `毎月の支出を約${fmtMoney(cut)}しぼると、${params.endAge}歳まで資産が持つ計算です。`,
+      });
     }
-    if (lifeOf(vKpis, params.endAge) > lifeOf(kpis, params.endAge)) {
-      const to = vKpis.survivesToEnd ? `${params.endAge}歳まで持つ` : `約${vKpis.lifetimeAge}歳まで延びる`;
-      tips.push({ type: 'tip', title: '改善のヒント', text: `${describe}、資産寿命が${to}計算です。` });
+  }
+
+  // ③ 効き目くらべ: 同じ月1万円なら、どのレバーが効くプランか
+  if (!kpis.survivesToEnd) {
+    const gain = (patch) => {
+      const v = { ...params, ...patch };
+      return lifeOf(deriveKpis(projectAssets(v, rate), v), params.endAge) - lifeOf(kpis, params.endAge);
+    };
+    const canInvest = rate > 0 && (params.monthlyInvest + 10000) * 12 <= Math.max(0, surplus);
+    const canCut = params.annualExpense >= 1200000;
+    if (canInvest && canCut) {
+      const byInvest = gain({ monthlyInvest: params.monthlyInvest + 10000 });
+      const byCut = gain({ annualExpense: params.annualExpense - 120000 });
+      if (byInvest > 0 && byCut > 0 && Math.abs(byInvest - byCut) >= 2) {
+        const [winner, w, l] = byCut > byInvest
+          ? ['支出の見直し', byCut, byInvest]
+          : ['積み立ての上乗せ', byInvest, byCut];
+        tips.push({
+          type: 'tip',
+          title: '改善のヒント',
+          text: `同じ月1万円でも、このプランでは「${winner}」のほうが効きます（資産寿命 +${w}歳 vs +${l}歳）。老後の支出も一緒に下がるためです。`,
+        });
+      }
     }
+  }
+
+  // ④ 下振れチェック: 利回りが2%低かったら
+  if (params.expectedReturn >= 3) {
+    const downRate = params.expectedReturn - 2;
+    const v = { ...params, expectedReturn: downRate };
+    const sKpis = deriveKpis(projectAssets(v, downRate / 100), v);
+    if (kpis.survivesToEnd && sKpis.survivesToEnd) {
+      tips.push({
+        type: 'tip',
+        title: '安心材料',
+        text: `利回りが${downRate}%に下がっても、資産は${params.endAge}歳まで持つ計算です。下振れにも粘り強いプランです。`,
+      });
+    } else if (kpis.survivesToEnd && !sKpis.survivesToEnd && sKpis.lifetimeAge !== null) {
+      tips.push({
+        type: 'tip',
+        title: '改善のヒント',
+        text: `利回りが${downRate}%だと、資産寿命は約${sKpis.lifetimeAge}歳までになります。利回り頼みをへらすなら、積み立てや支出の調整が効きます。`,
+      });
+    }
+  }
+
+  return [...insights, ...tips.slice(0, 3)];
+}
+
+// 目標到達に必要な毎月の上乗せ額を二分探索で逆算する（1,000円刻み・余剰の範囲内）。
+// 届き得ない場合は null。
+export function solveExtraMonthlyInvest(params, rate) {
+  const surplus = params.annualIncome - params.annualExpense;
+  const maxExtra = Math.floor(Math.max(0, surplus / 12 - params.monthlyInvest) / 1000) * 1000;
+  if (maxExtra < 1000) return null;
+  const reaches = (extra) => {
+    const v = { ...params, monthlyInvest: params.monthlyInvest + extra };
+    return deriveKpis(projectAssets(v, rate), v).targetAge !== null;
   };
+  if (!reaches(maxExtra)) return null;
+  let lo = 0; // 届かない側（現状）
+  let hi = maxExtra; // 届く側
+  while (hi - lo > 1000) {
+    let mid = lo + Math.floor((hi - lo) / 2 / 1000) * 1000;
+    if (mid === lo) mid = lo + 1000;
+    if (reaches(mid)) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
 
-  if (rate > 0 && (params.monthlyInvest + 10000) * 12 <= Math.max(0, surplus)) {
-    tryVariant({ monthlyInvest: params.monthlyInvest + 10000 }, '毎月の投資をあと1万円増やすと');
+// 終了年齢まで資産が持つために必要な、毎月の支出削減額を二分探索で逆算する
+// （1,000円刻み・上限は月5万円。それでも持たない/支出が小さすぎる場合は null）。
+export function solveMonthlyExpenseCut(params, rate) {
+  const MAX_CUT = 50000;
+  if (params.annualExpense - MAX_CUT * 12 < 600000) return null;
+  const survives = (cutMonthly) => {
+    const v = { ...params, annualExpense: params.annualExpense - cutMonthly * 12 };
+    return deriveKpis(projectAssets(v, rate), v).survivesToEnd;
+  };
+  if (!survives(MAX_CUT)) return null;
+  let lo = 0; // 持たない側（現状）
+  let hi = MAX_CUT; // 持つ側
+  while (hi - lo > 1000) {
+    let mid = lo + Math.floor((hi - lo) / 2 / 1000) * 1000;
+    if (mid === lo) mid = lo + 1000;
+    if (survives(mid)) hi = mid;
+    else lo = mid;
   }
-  if (params.annualExpense >= 1200000) {
-    tryVariant({ annualExpense: params.annualExpense - 120000 }, '毎月の支出を1万円しぼると');
-  }
-  if (!kpis.survivesToEnd && params.retireAge + 2 <= 75) {
-    tryVariant({ retireAge: params.retireAge + 2 }, '退職を2年おそくすると');
-  }
-
-  return [...insights, ...tips.slice(0, 2)];
+  return hi;
 }

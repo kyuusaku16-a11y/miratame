@@ -21,6 +21,7 @@ import {
 } from './history.js';
 import { seasonalMessage } from './seasonal.js';
 import { buildRecordIcs } from './calendar.js';
+import { UPDATES, NOTE_ARTICLES } from './updates.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
 // （man=万円⇄円 / pct100=%⇄比率 / raw=そのまま）。
@@ -815,6 +816,24 @@ function init() {
   $('calendarBtn').addEventListener('click', downloadRecordCalendar);
   $('saveScenarioBtn').addEventListener('click', saveCurrentScenario);
   renderScenarios();
+
+  // お知らせ（最新3件）と、noteの記事リンク
+  for (const u of UPDATES.slice(0, 3)) {
+    const li = document.createElement('li');
+    const [, m, d] = u.date.split('-');
+    li.textContent = `🆕 ${Number(m)}/${Number(d)} ${u.text}`;
+    $('updatesList').appendChild(li);
+  }
+  for (const a of NOTE_ARTICLES) {
+    const li = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = a.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = `${a.title}（note）`;
+    li.appendChild(link);
+    $('readingList').appendChild(li);
+  }
 
   if (FEEDBACK_URL) {
     $('feedbackLink').href = FEEDBACK_URL;

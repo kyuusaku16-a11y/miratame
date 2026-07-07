@@ -741,6 +741,34 @@ header .tagline { font-size: 13px; }
   .diagnosis-hero .dh-text { flex-basis: 100%; align-items: center; }
 }
 
+/* よみもの・お知らせ */
+.reading { margin-top: 16px; }
+.reading h2 { margin: 0 0 8px; font-size: 17px; font-family: var(--font-display); color: var(--color-ink); }
+.reading-list { margin: 0; padding-left: 18px; }
+.reading-list li { margin: 6px 0; }
+.reading-list a { color: var(--color-primary-deep); text-decoration: none; }
+.reading-list a:hover { text-decoration: underline; }
+.reading-more { margin: 8px 0 12px; font-size: 13px; }
+.reading-more a { color: var(--color-muted); text-decoration: none; }
+.reading-more a:hover { color: var(--color-primary-deep); }
+.updates-list { margin: 0; padding: 10px 0 0; border-top: 1px dashed var(--color-line); list-style: none; }
+.updates-list li { margin: 4px 0; font-size: 12px; color: var(--color-muted); }
+
+/* コラム一覧 */
+.column-list { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+.column-item {
+  display: block;
+  background: #fff;
+  border: 2px solid var(--color-line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--color-ink);
+}
+.column-item:hover { border-color: var(--color-primary); }
+.column-item strong { display: block; font-family: var(--font-display); color: var(--color-primary-deep); margin-bottom: 4px; }
+.column-item span { font-size: 13px; line-height: 1.7; }
+
 /* シナリオ保存・くらべる */
 .scenario-row { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
 .scenario-save { border: 1px dashed #b08bbb; background: none; color: #7d5f88; border-radius: 999px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: inherit; }

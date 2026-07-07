@@ -1,13 +1,66 @@
-// 結果シェアカード（1200×630）とシェア文の生成。
-// 方針: 個人の入力額（資産・収入など）は一切載せず、資産寿命と目標達成年だけの
-// 「シェアして嬉しい情報」に絞る（安心して共有できる＝広まりやすい）。
+// 家計タイプ診断とシェアカード（1200×630）の生成。
+// 方針: 金額は一切載せず「タイプ」をシェアする（資産額を晒さない＝安心して共有できる）。
+// 全タイプ褒める設計（§1: 責めない）。受け取った人が「私は何型？」と試したくなる構造。
 
-// シェア文（金額は含めない。不利な数字も晒さない）
+// 6つの家計タイプ（すべて前向きな2行コピー）
+export const HOUSEHOLD_TYPES = {
+  bird: {
+    id: 'bird',
+    name: 'はばたき小鳥型',
+    img: 'assets/bird-blue.png',
+    lines: ['育てた資産と身軽さで、自由に生きるタイプ。', '時間という一番の贅沢を手にしています。'],
+  },
+  rabbit: {
+    id: 'rabbit',
+    name: 'まっしぐらうさぎ型',
+    img: 'assets/rabbit-joy.png',
+    lines: ['目標までまっしぐらのスピード派。', 'この勢い、まわりにも元気をくれます。'],
+  },
+  family: {
+    id: 'family',
+    name: '家族でバンザイ型',
+    img: 'assets/pair-banzai.png',
+    lines: ['家族の未来まで見すえて計画するあったか派。', '教育費も見える化して、みんなで前へ。'],
+  },
+  grower: {
+    id: 'grower',
+    name: 'じっくり育てるくま型',
+    img: 'assets/bear-watering.png',
+    lines: ['コツコツ投資で未来を育てる堅実派。', '複利の力を信じて水をやり続けるタイプ。'],
+  },
+  steady: {
+    id: 'steady',
+    name: 'どっしりくま型',
+    img: 'assets/bear-thumbs.png',
+    lines: ['あわてず騒がず、長く持たせる安定派。', 'その落ち着き、老後まで頼りになります。'],
+  },
+  sprout: {
+    id: 'sprout',
+    name: 'これから芽ぐく型',
+    img: 'assets/sprout.png',
+    lines: ['スタート地点に立った、のびしろ満点タイプ。', '小さな一歩が、これから大きく育ちます。'],
+  },
+};
+
+// 入力とKPIから家計タイプを診断する純粋関数
+export function diagnoseType(kpis, params) {
+  if (params.annualIncome === 0) return HOUSEHOLD_TYPES.bird;
+  if (kpis.targetAge !== null && kpis.targetAge - params.currentAge <= 15) return HOUSEHOLD_TYPES.rabbit;
+  if ((params.children ?? []).length > 0) return HOUSEHOLD_TYPES.family;
+
+  const surplus = params.annualIncome - params.annualExpense;
+  const savingsRate = params.annualIncome > 0 ? surplus / params.annualIncome : 0;
+  const investShare = surplus > 0 ? (params.monthlyInvest * 12) / surplus : 0;
+  if (savingsRate >= 0.25 && investShare >= 0.5) return HOUSEHOLD_TYPES.grower;
+
+  if (kpis.survivesToEnd) return HOUSEHOLD_TYPES.steady;
+  return HOUSEHOLD_TYPES.sprout;
+}
+
+// シェア文（金額なし・タイプ名入り）
 export function buildShareText(kpis, params) {
-  if (kpis.survivesToEnd) {
-    return `私の資産、${params.endAge}歳まで持つ計算でした🌱 資産寿命を見える化できる無料シミュレーター #マネービジョン`;
-  }
-  return '未来の資産をグラフで見える化🌱 資産寿命と「のばし方」まで教えてくれる無料シミュレーター #マネービジョン';
+  const type = diagnoseType(kpis, params);
+  return `私の家計タイプは【${type.name}】でした🌱 あなたはどのタイプ？ #マネービジョン #家計タイプ診断`;
 }
 
 const loadImg = (src) =>
@@ -20,8 +73,9 @@ const loadImg = (src) =>
 
 const FONT = '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif';
 
-// 1200×630 のシェアカードを描いた canvas を返す
+// 家計タイプの診断カード（1200×630）を描いた canvas を返す
 export async function renderShareCard(kpis, params) {
+  const type = diagnoseType(kpis, params);
   const W = 1200;
   const H = 630;
   const canvas = document.createElement('canvas');
@@ -30,7 +84,7 @@ export async function renderShareCard(kpis, params) {
   const ctx = canvas.getContext('2d');
   await document.fonts.ready;
 
-  // 背景（ベリーテーマのグラデーション）
+  // 背景
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, '#fbe6e4');
   bg.addColorStop(1, '#fdf3f1');
@@ -40,44 +94,49 @@ export async function renderShareCard(kpis, params) {
   // 白パネル
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.roundRect(60, 70, W - 120, H - 190, 32);
+  ctx.roundRect(56, 56, W - 112, H - 168, 32);
   ctx.fill();
   ctx.strokeStyle = '#f5c7d2';
   ctx.lineWidth = 3;
   ctx.stroke();
 
+  // 左カラム: テキスト（キャラの場所を右に確保）
+  const textCenterX = 430;
   ctx.textAlign = 'center';
 
-  // 見出し
   ctx.fillStyle = '#c96079';
-  ctx.font = `700 42px ${FONT}`;
-  ctx.fillText('わたしの資産寿命', W / 2, 175);
+  ctx.font = `700 40px ${FONT}`;
+  ctx.fillText('わたしの家計タイプ', textCenterX, 160);
 
-  // メイン数値
   ctx.fillStyle = '#5c4a44';
-  ctx.font = `700 104px ${FONT}`;
-  const main = kpis.survivesToEnd
-    ? `${params.endAge}歳まで安心圏`
-    : kpis.lifetimeAge !== null
-      ? `約${kpis.lifetimeAge}歳`
-      : 'これから育てる';
-  ctx.fillText(main, W / 2, 315);
+  ctx.font = `700 72px ${FONT}`;
+  ctx.fillText(`【${type.name}】`, textCenterX, 268);
 
-  // サブ（目標達成の見込み）
-  if (kpis.targetAge !== null) {
-    ctx.fillStyle = '#c96079';
-    ctx.font = `700 38px ${FONT}`;
-    ctx.fillText(`🎉 目標達成は ${kpis.targetAge}歳 の見込み`, W / 2, 395);
+  ctx.fillStyle = '#8a6f66';
+  ctx.font = `500 30px ${FONT}`;
+  ctx.fillText(type.lines[0], textCenterX, 340);
+  ctx.fillText(type.lines[1], textCenterX, 388);
+
+  ctx.fillStyle = '#c96079';
+  ctx.font = `700 34px ${FONT}`;
+  ctx.fillText('あなたはどのタイプ？', textCenterX, 470);
+
+  // 右カラム: タイプのキャラを大きく
+  try {
+    const img = await loadImg(type.img);
+    const box = { x: 800, y: 130, w: 330, h: 330 };
+    const scale = Math.min(box.w / img.width, box.h / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    ctx.drawImage(img, box.x + (box.w - dw) / 2, box.y + (box.h - dh) / 2, dw, dh);
+  } catch {
+    /* 画像なしでもテキストで成立 */
   }
 
-  // キャラと花（読めなくてもテキストだけで成立させる）
+  // 小花の飾り
   try {
-    const [pair, flowers] = await Promise.all([
-      loadImg('assets/pair-joy.png'),
-      loadImg('assets/flowers.png'),
-    ]);
-    ctx.drawImage(pair, W - 350, H - 255, 280, 156);
-    ctx.drawImage(flowers, 78, H - 230, 200, 99);
+    const flowers = await loadImg('assets/flowers.png');
+    ctx.drawImage(flowers, 80, H - 220, 190, 94);
   } catch {
     /* no-op */
   }

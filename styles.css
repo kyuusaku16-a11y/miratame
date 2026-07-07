@@ -21,6 +21,9 @@
   --font-body: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
+/* スクロール位置の補正はJS側で行う（withScrollAnchor）。
+   ブラウザ標準のアンカリングと二重補正にならないよう無効化（Safariはもともと非対応） */
+html { overflow-anchor: none; }
 body {
   margin: 0;
   font-family: var(--font-body);

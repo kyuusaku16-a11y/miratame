@@ -586,7 +586,22 @@ function renderReaction(reaction, duration = 4000) {
   }, duration);
 }
 
-function update({ withReaction = false } = {}) {
+// スクロール補正: 再描画で操作中の入力欄より上の高さが変わっても、
+// 入力欄が画面上で動かないようにする（Safariはスクロールアンカリング非対応）
+let anchorEl = null;
+
+function withScrollAnchor(fn) {
+  const el = anchorEl?.isConnected ? anchorEl : null;
+  const before = el ? el.getBoundingClientRect().top : 0;
+  fn();
+  if (!el) return;
+  const delta = el.getBoundingClientRect().top - before;
+  if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+}
+
+// light: スライダーのドラッグ中はKPI・グラフだけ即時更新し、
+// 重いコメント欄の作り直し（高さが変わる=チラつきの原因）はドラッグ後に1回だけ
+function update({ withReaction = false, light = false } = {}) {
   state = readForm();
   saveState(state);
 
@@ -594,18 +609,25 @@ function update({ withReaction = false } = {}) {
   const mainSeries = projectAssets(params, params.expectedReturn / 100);
 
   const kpis = deriveKpis(mainSeries, params);
-  renderKpis(kpis, params);
-  const advice = buildAdvice(params, mainSeries, kpis);
-  const comments = buildComments(kpis, params);
-  const guidance = buildGuidanceCards(params, mainSeries, comments, advice);
-  renderComments(guidance.cards, guidance.summary);
-  renderDiagnosis(buildNarrativeReport(params, mainSeries, kpis, advice), advice.filter((a) => a.type === 'tip'));
-  renderValidation(deriveValidation(params));
-  renderAdvancedSummary();
-  renderSchedule(buildSchedule(params));
-  if (withReaction) renderReaction(buildReaction(prevKpis, kpis));
-  prevKpis = kpis;
-  recordSnapshot(kpis); // 今月分のスナップショットを常に最新へ（来月の「前回とくらべて」用）
+  withScrollAnchor(() => {
+    renderKpis(kpis, params);
+    renderValidation(deriveValidation(params));
+    renderAdvancedSummary();
+    if (!light) {
+      const advice = buildAdvice(params, mainSeries, kpis);
+      const comments = buildComments(kpis, params);
+      const guidance = buildGuidanceCards(params, mainSeries, comments, advice);
+      renderComments(guidance.cards, guidance.summary);
+      renderDiagnosis(buildNarrativeReport(params, mainSeries, kpis, advice), advice.filter((a) => a.type === 'tip'));
+      renderSchedule(buildSchedule(params));
+      if (withReaction) renderReaction(buildReaction(prevKpis, kpis));
+    }
+  });
+  if (!light) {
+    // 変化リアクションはドラッグ前→後の比較にしたいので、途中経過では更新しない
+    prevKpis = kpis;
+    recordSnapshot(kpis); // 今月分のスナップショットを常に最新へ（来月の「前回とくらべて」用）
+  }
   syncSliders();
   chart = renderChart($('chart'), mainSeries, params, chart);
 }
@@ -635,14 +657,22 @@ function init() {
   renderChildren();
 
   const onType = debounce(() => update({ withReaction: true }), 150);
-  for (const f of FIELDS) $(f.id).addEventListener('input', onType);
+  for (const f of FIELDS)
+    $(f.id).addEventListener('input', (e) => {
+      anchorEl = e.target;
+      onType();
+    });
 
-  // スライダーはドラッグ中も毎回即時再計算（§5、debounceなし）
+  // スライダーはドラッグ中も毎回即時再計算（§5、debounceなし）。
+  // ただしKPI・グラフだけの軽い更新にして、重い部分は指を止めてから1回
+  const heavyUpdate = debounce(() => update({ withReaction: true }), 300);
   for (const id of SLIDERS) {
     const f = fieldOf(id);
     $(`${id}Slider`).addEventListener('input', (e) => {
+      anchorEl = e.target;
       $(id).value = toUi(f, Number(e.target.value));
-      update({ withReaction: true });
+      update({ light: true });
+      heavyUpdate();
     });
   }
 

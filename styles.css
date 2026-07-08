@@ -986,9 +986,29 @@ footer .footer-link { color: var(--color-primary-deep); }
   margin-left: 10px;
 }
 .header-diagnose:hover { filter: brightness(1.05); }
+header h1 { flex-wrap: wrap; } /* 幅が足りない端末では題名の下に折返し */
+
+/* 数字入力へ飛ぶボタン（スマホ専用。PCはフォームが常に見えているので不要） */
+.header-jump {
+  display: none;
+  border: 1.5px solid var(--color-primary);
+  background: var(--color-panel);
+  color: var(--color-primary-deep);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.header-diagnose .dg-short { display: none; }
 @media (max-width: 940px) {
-  .brand { flex-wrap: wrap; }
-  .header-diagnose { font-size: 12px; padding: 8px 12px; margin-left: 4px; }
+  .header-diagnose { font-size: 12px; padding: 7px 12px; margin-left: 0; }
+  .header-diagnose .dg-full { display: none; }
+  .header-diagnose .dg-short { display: inline; }
+  .header-jump { display: inline-block; align-self: flex-start; }
+  .brand-text { display: flex; flex-direction: column; align-items: flex-start; }
 }
 
 /* 診断結果のポップアップ */
@@ -1109,4 +1129,9 @@ footer .footer-link { color: var(--color-primary-deep); }
 /* タイプ図鑑: PCは4×4のきれいな正方形配置に */
 @media (min-width: 941px) {
   .type-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* スマホ: ヘッダーのうさくまペアを大きく（末尾＝最優先） */
+@media (max-width: 940px) {
+  header .char-img { width: 128px; height: 86px; }
 }

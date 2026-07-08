@@ -809,6 +809,10 @@ function init() {
   });
   $('addEvent').addEventListener('click', () => addEventRow());
   $('shareBtn').addEventListener('click', openShareDialog);
+  $('jumpFormBtn').addEventListener('click', () => {
+    trackEvent('jump-form');
+    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
+  });
   if (firstVisit) $('diagnosisHero').hidden = false;
   $('heroDiagnoseBtn').addEventListener('click', () => {
     try {

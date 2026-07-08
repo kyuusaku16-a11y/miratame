@@ -113,7 +113,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
   gap: 12px;
   min-height: 86px;
 }
-.kpi.hero { background: linear-gradient(135deg, var(--color-good-bg), var(--color-panel)); border: 1px solid var(--color-line); }
+.kpi.hero { background: linear-gradient(135deg, #fdeef1, #fffdf7); border: 1.5px solid #f0a3b4; }
 .kpi-icon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; }
 .icon-green { background: #e7f3df; }
 .icon-blue { background: #e7f4f2; }

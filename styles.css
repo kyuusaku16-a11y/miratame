@@ -964,9 +964,8 @@ footer .footer-link { color: var(--color-primary-deep); }
   body { padding-bottom: 64px; } /* バーが最下部の文章を隠さないように */
 }
 
-/* 結果シェアボタン */
-.share-row { display: flex; justify-content: flex-end; }
-.share-row button {
+/* 診断ボタン（ヘッダーの題名横が定位置） */
+.header-diagnose {
   border: none;
   background: linear-gradient(135deg, #f0a3b4, #e58aa0);
   color: #fff;
@@ -977,8 +976,14 @@ footer .footer-link { color: var(--color-primary-deep); }
   border-radius: 999px;
   cursor: pointer;
   box-shadow: var(--shadow);
+  white-space: nowrap;
+  margin-left: 10px;
 }
-.share-row button:hover { filter: brightness(1.05); }
+.header-diagnose:hover { filter: brightness(1.05); }
+@media (max-width: 940px) {
+  .brand { flex-wrap: wrap; }
+  .header-diagnose { font-size: 12px; padding: 8px 12px; margin-left: 4px; }
+}
 
 /* 診断結果のポップアップ */
 .share-dialog {

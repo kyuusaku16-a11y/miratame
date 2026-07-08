@@ -1,4 +1,4 @@
-// お金の性格診断（16タイプ）とシェアカード（1200×630）の生成。
+// ミラため性格診断（16タイプ）とシェアカード（1200×630）の生成。
 // 4軸（お金の流れ×運用姿勢×進み方×夢の大きさ）→ 動物4種×性格4種 = 16タイプ。
 // 方針: 金額は一切載せない・全タイプ褒める（§1: 責めない）・
 // 「私は◯◯型」と名乗りたくなる固有の名言をタイプごとに持つ。
@@ -106,7 +106,7 @@ export function allTypes() {
 // シェア文（金額なし・タイプ名と4タグ入り）
 export function buildShareText(kpis, params) {
   const t = diagnoseType(kpis, params);
-  return `私のお金の性格は【${t.name}】でした🌰（${t.tags.join('×')}）あなたは16タイプのどれ？ #ミラため #お金の性格診断`;
+  return `私のお金の性格は【${t.name}】でした🌰（${t.tags.join('×')}）あなたは16タイプのどれ？ #ミラため性格診断 #ミラため`;
 }
 
 const loadImg = (src) =>
@@ -165,7 +165,7 @@ export async function renderShareCard(kpis, params) {
 
   ctx.fillStyle = '#c96079';
   ctx.font = `700 38px ${FONT}`;
-  ctx.fillText('わたしのお金の性格', textCenterX, 150);
+  ctx.fillText('ミラため性格診断', textCenterX, 150);
 
   ctx.fillStyle = '#5c4a44';
   ctx.font = `700 76px ${FONT}`;

@@ -1269,6 +1269,26 @@ async function openShareDialog() {
   currentShare = { text, url, code: type.code, type };
   $('shareTsuyomi').textContent = type.tsuyomi;
   $('shareNobashi').textContent = type.nobashi;
+  // 詳細説明文（v3ロング版）は診断を開いたときだけ読み込む（初期ロードを増やさない）
+  try {
+    const { DESCRIPTIONS } = await import('./descriptions.js');
+    const paras = DESCRIPTIONS[type.code] ?? [];
+    const more = $('shareDescMore');
+    more.querySelectorAll('p').forEach((p) => p.remove());
+    if (paras.length) {
+      for (const text of paras) {
+        const p = document.createElement('p');
+        p.textContent = text;
+        more.appendChild(p);
+      }
+      more.open = false;
+      $('shareDesc').hidden = false;
+    } else {
+      $('shareDesc').hidden = true;
+    }
+  } catch {
+    $('shareDesc').hidden = true; // 読み込みに失敗しても診断自体は続行
+  }
   // カードの色は現在のテーマに合わせて開く（ダイアログ内で切替可）
   await paintShareCard(state.settings.themeId === 'forest' ? 'forest' : 'berry');
   $('shareDialog').showModal();

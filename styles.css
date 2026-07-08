@@ -885,7 +885,7 @@ header .tagline { font-size: 13px; }
 footer .footer-link { color: var(--color-primary-deep); }
 
 /* タイプ図鑑（types.html） */
-.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 18px 0; }
 .type-card {
   background: #fff;
   border: 2px solid var(--color-line);
@@ -897,6 +897,12 @@ footer .footer-link { color: var(--color-primary-deep); }
 .type-card strong { display: block; font-family: var(--font-display); color: var(--color-primary-deep); font-size: 15px; margin-top: 4px; }
 .type-tags { margin: 4px 0 6px; font-size: 11px; color: var(--color-muted); }
 .type-quote { margin: 0; font-size: 12px; line-height: 1.7; color: var(--color-ink); text-align: left; }
+.type-more { margin-top: 8px; text-align: left; }
+.type-more summary { cursor: pointer; font-size: 15px; font-weight: 700; color: var(--color-primary-deep); }
+.type-more summary:hover { text-decoration: underline; }
+.type-more p { margin: 8px 0 0; font-size: 12px; line-height: 1.8; color: var(--color-ink); }
+.share-desc { margin: 10px 0 0; padding-top: 10px; border-top: 1px dashed var(--color-line); text-align: left; }
+.share-desc p { margin: 0 0 8px; font-size: 12px; line-height: 1.8; color: var(--color-ink); }
 
 /* きろく帳（スタンプ+資産チェック統合パネル）内のスタンプ部分 */
 .stamps-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
@@ -1169,9 +1175,9 @@ header h1 { flex-wrap: wrap; } /* 幅が足りない端末では題名の下に�
   .chart-wrap { padding: 12px 8px 14px; }
 }
 
-/* タイプ図鑑: PCは4×4のきれいな正方形配置に */
+/* タイプ図鑑: 説明文が入ったのでPCは2列で読みやすく */
 @media (min-width: 941px) {
-  .type-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* スマホ: ヘッダーのうさくまペアを大きく（末尾＝最優先） */

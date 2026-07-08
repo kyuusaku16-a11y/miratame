@@ -6,7 +6,7 @@
     <title>ミラため性格診断 全16タイプ図鑑｜ミラため</title>
     <meta
       name="description"
-      content="ミラため性格診断（お金の性格診断）の全16タイプを一挙紹介。ためる×そだてるのリス、コツコツのハムスター、まわして増やすミツバチ、ゆったりカピバラ——あなたはどのタイプ？"
+      content="ミラため性格診断（お金の性格診断）の全16タイプを、動物の習性・つよみ・よわみの詳しい解説つきで紹介。森をつくるビーバー、石橋をわたるカメ、自由なカモメ、ひなたのカピバラ——あなたはどのタイプ？無料・30秒・登録不要。"
     />
     <meta property="og:title" content="ミラため性格診断 全16タイプ図鑑" />
     <meta property="og:description" content="あなたのお金の性格は16タイプのどれ？無料・30秒・登録不要の診断。" />
@@ -53,6 +53,7 @@
 
     <script type="module">
       import { allTypes } from './src/share.js';
+      import { DESCRIPTIONS } from './src/descriptions.js';
       const grid = document.getElementById('typeGrid');
       for (const t of allTypes()) {
         const card = document.createElement('div');
@@ -72,6 +73,20 @@
         quote.className = 'type-quote';
         quote.textContent = `「${t.hitokoto}」`;
         card.append(emoji, code, name, tags, quote);
+        const paras = DESCRIPTIONS[t.code] ?? [];
+        if (paras.length) {
+          const more = document.createElement('details');
+          more.className = 'type-more';
+          const summary = document.createElement('summary');
+          summary.textContent = 'くわしく見る';
+          more.appendChild(summary);
+          for (const p of paras) {
+            const para = document.createElement('p');
+            para.textContent = p;
+            more.appendChild(para);
+          }
+          card.append(more);
+        }
         grid.appendChild(card);
       }
     </script>

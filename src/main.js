@@ -1223,6 +1223,22 @@ function importStateFile(file) {
 let currentShare = null; // { blob, file, text, url }
 
 async function openShareDialog() {
+  // ベール中（数字を入れる前）は診断もお楽しみに取っておく
+  // （初期値のままだと全員同じタイプになってしまうため）
+  if (veiled) {
+    trackEvent('diagnosis-blocked');
+    const veil = $('chartVeil');
+    const title = veil.querySelector('.veil-title');
+    const original = title.innerHTML;
+    title.textContent = '診断は、数字を入れてからのお楽しみ🌰';
+    veil.classList.add('veil-shake');
+    veil.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      veil.classList.remove('veil-shake');
+      title.innerHTML = original;
+    }, 2600);
+    return;
+  }
   trackEvent('diagnosis');
   const params = paramsOf(state);
   const series = projectAssets(params, params.expectedReturn / 100);

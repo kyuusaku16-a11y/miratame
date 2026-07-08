@@ -105,13 +105,22 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
         {
           label:                `現在のプラン（利回り${params.expectedReturn}%）`,
           data:                 mainData,
-          borderWidth:          3,
+          borderWidth:          3.5,
+          // 線の下をふんわり塗って「資産の山」に見せる（ベリー色→透明）
+          fill:                 'origin',
+          backgroundColor: (ctx) => {
+            const { chartArea, ctx: c } = ctx.chart;
+            if (!chartArea) return 'rgba(232, 160, 170, 0.12)';
+            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, 'rgba(232, 160, 170, 0.30)');
+            g.addColorStop(1, 'rgba(232, 160, 170, 0.02)');
+            return g;
+          },
           pointRadius,
           pointBackgroundColor: pointBg,
           pointBorderColor:     pointBorder,
           pointBorderWidth:     2,
           pointHoverRadius:     7,
-          fill:                 false,
           tension:              0.3,
           segment: {
             borderColor: (ctx) =>
@@ -190,12 +199,13 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       },
       scales: {
         x: {
-          title:  { display: true, text: '年齢', color: CHART_COLORS.text },
+          // スマホは軸タイトルを省いて描画領域を広げる
+          title:  { display: !matchMedia('(max-width: 720px)').matches, text: '年齢', color: CHART_COLORS.text },
           ticks:  { maxTicksLimit: 12, color: CHART_COLORS.text },
           grid:   { color: CHART_COLORS.grid },
         },
         y: {
-          title: { display: true, text: '資産額', color: CHART_COLORS.text },
+          title: { display: !matchMedia('(max-width: 720px)').matches, text: '資産額', color: CHART_COLORS.text },
           grid:  { color: CHART_COLORS.grid },
           ticks: {
             color: CHART_COLORS.text,

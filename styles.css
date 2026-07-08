@@ -1066,3 +1066,31 @@ footer .footer-link { color: var(--color-primary-deep); }
   .schedule.collapsed #scheduleList { display: none; }
   .schedule.collapsed h2 { margin-bottom: 0; }
 }
+
+/* スマホ: グラフを主役に（ファイル末尾＝最優先） */
+@media (max-width: 720px) {
+  /* KPI: 資産寿命を大きな1枚+残り3つを小さく1行 → 1画面目にグラフが入る */
+  .kpis {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      'hero hero hero'
+      'a b c';
+    gap: 8px;
+  }
+  .kpi.hero { grid-area: hero; padding: 12px 16px; }
+  .kpi.hero .kpi-icon { width: 54px; height: 54px; }
+  .kpi.hero .kpi-icon img { width: 42px; height: 42px; }
+  .kpi.hero .kpi-value { font-size: 20px; }
+  .kpis .kpi:nth-child(1) { grid-area: a; }
+  .kpis .kpi:nth-child(2) { grid-area: b; }
+  .kpis .kpi:nth-child(3) { grid-area: c; }
+  .kpis .kpi:not(.hero) { flex-direction: column; padding: 8px 6px; gap: 4px; text-align: center; }
+  .kpis .kpi:not(.hero) .kpi-icon { width: 30px; height: 30px; }
+  .kpis .kpi:not(.hero) .kpi-icon img { width: 22px; height: 22px; }
+  .kpis .kpi:not(.hero) .kpi-label { font-size: 10px; }
+  .kpis .kpi:not(.hero) .kpi-value { font-size: 13px; }
+
+  /* グラフ: 高く・幅いっぱいに */
+  .chart-box { height: 390px; }
+  .chart-wrap { padding: 12px 8px 14px; }
+}

@@ -74,7 +74,7 @@ test('buildShareText: タイプ名・4タグ入り、金額なし', () => {
   assert.ok(t.includes('冒険家ハムスター'));
   assert.ok(t.includes('ためる') && t.includes('大志'));
   assert.ok(!t.includes('万円') && !t.includes('億円'));
-  assert.ok(t.includes('#マネービジョン'));
+  assert.ok(t.includes('#ミラため'));
 });
 
 test('allTypes: 16タイプすべて・名前と名言はユニーク', () => {

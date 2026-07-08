@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dist = join(root, 'dist');
-const siteUrl = 'https://kyuusaku16-a11y.github.io/money-vision/';
+const siteUrl = 'https://kyuusaku16-a11y.github.io/miratame/';
 
 async function main() {
   await rm(dist, { recursive: true, force: true });

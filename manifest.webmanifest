@@ -1,7 +1,7 @@
 {
-  "name": "マネービジョン",
-  "short_name": "マネービジョン",
-  "description": "未来の資産を、見える化する。",
+  "name": "ミラため",
+  "short_name": "ミラため",
+  "description": "未来のために、貯めて育てる。",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",

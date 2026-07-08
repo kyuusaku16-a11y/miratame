@@ -106,7 +106,7 @@ export function allTypes() {
 // シェア文（金額なし・タイプ名と4タグ入り）
 export function buildShareText(kpis, params) {
   const t = diagnoseType(kpis, params);
-  return `私のお金の性格は【${t.name}】でした🌰（${t.tags.join('×')}）あなたは16タイプのどれ？ #マネービジョン #お金の性格診断`;
+  return `私のお金の性格は【${t.name}】でした🌰（${t.tags.join('×')}）あなたは16タイプのどれ？ #ミラため #お金の性格診断`;
 }
 
 const loadImg = (src) =>
@@ -214,9 +214,9 @@ export async function renderShareCard(kpis, params) {
 
   ctx.fillStyle = '#a2887f';
   ctx.font = `500 28px ${FONT}`;
-  ctx.fillText('マネービジョン — 未来の資産を、見える化する。', W / 2, H - 62);
+  ctx.fillText('ミラため — 未来のために、貯めて育てる。', W / 2, H - 62);
   ctx.font = `500 24px ${FONT}`;
-  ctx.fillText('kyuusaku16-a11y.github.io/money-vision', W / 2, H - 26);
+  ctx.fillText('kyuusaku16-a11y.github.io/miratame', W / 2, H - 26);
 
   return canvas;
 }

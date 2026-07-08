@@ -1119,7 +1119,7 @@ function exportState() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'マネービジョン設定.json';
+  a.download = 'ミラため設定.json';
   a.click();
   URL.revokeObjectURL(a.href);
   showBackupMsg('書き出しました。機種変更のときは新しい端末でこのファイルを読み込んでね');
@@ -1155,13 +1155,13 @@ async function openShareDialog() {
   const series = projectAssets(params, params.expectedReturn / 100);
   const kpis = deriveKpis(series, params);
   const text = buildShareText(kpis, params);
-  const url = 'https://kyuusaku16-a11y.github.io/money-vision/';
+  const url = 'https://kyuusaku16-a11y.github.io/miratame/';
 
   const canvas = await renderShareCard(kpis, params);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   currentShare = {
     blob,
-    file: new File([blob], 'money-vision.png', { type: 'image/png' }),
+    file: new File([blob], 'miratame.png', { type: 'image/png' }),
     text,
     url,
   };
@@ -1201,7 +1201,7 @@ function saveShareImage() {
   trackEvent('share-save');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(currentShare.blob);
-  a.download = 'money-vision.png';
+  a.download = 'miratame.png';
   a.click();
   URL.revokeObjectURL(a.href);
 }

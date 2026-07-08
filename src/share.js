@@ -1,130 +1,207 @@
-// ミラため性格診断（16タイプ）とシェアカード（1200×630）の生成。
-// 4軸（お金の流れ×運用姿勢×進み方×夢の大きさ）→ 動物4種×性格4種 = 16タイプ。
-// 方針: 金額は一切載せない・全タイプ褒める（§1: 責めない）・
-// 「私は◯◯型」と名乗りたくなる固有の名言をタイプごとに持つ。
+// ミラため性格診断（16タイプ・入力値ベース）とシェアカード（1200×630）。
+// 仕様: miratame-16types-spec.md（2026-07-09）
+// - 質問なし。シミュレーターの入力値のみから4軸を自動判定（実データなので正直）
+// - 全タイプ前向き・のばしどころは提案の口調・金額推奨や銘柄名は出さない
+// - 入力を変えるとタイプが変わるのは機能（タイプ進化=再訪の動機）
 
-// 動物 = お金の流れ × 運用姿勢
-export const ANIMALS = {
-  squirrel: { id: 'squirrel', label: 'リス', flow: 'ためる', grow: 'そだてる' },   // どんぐりを埋めて森を育てる
-  hamster: { id: 'hamster', label: 'ハムスター', flow: 'ためる', grow: 'まもる' }, // ほお袋にコツコツ
-  bee: { id: 'bee', label: 'ミツバチ', flow: 'まわす', grow: 'そだてる' },         // 回して蜜を生む
-  capybara: { id: 'capybara', label: 'カピバラ', flow: 'まわす', grow: 'まもる' }, // 今を満喫する余裕
+// しきい値は1箇所に集約（リリース後、分布を見て1行で調整できるように）
+export const THRESHOLDS = {
+  savingsRate: 0.2, // 軸1 ため力: 貯蓄率
+  investRatio: 0.3, // 軸2 そだて方: 投資比率
+  bufferMonths: 6, // 軸3 そなえ: 生活防衛月数
+  commitRate: 0.5, // 軸4 しこみ: 積立強度
 };
 
-// 性格 = 進み方 × 夢の大きさ
-export const PERSONAS = {
-  strategist: { id: 'strategist', label: '軍師', plan: '地図', dream: '大志' },
-  gardener: { id: 'gardener', label: '庭師', plan: '地図', dream: '満ち足り' },
-  adventurer: { id: 'adventurer', label: '冒険家', plan: 'コンパス', dream: '大志' },
-  poet: { id: 'poet', label: '詩人', plan: 'コンパス', dream: '満ち足り' },
+// 軸の値ラベル（カードのタグ表示用）
+const AXIS_LABELS = {
+  C: 'コツコツ',
+  Y: 'ゆとり',
+  G: 'そだてる',
+  M: 'まもる',
+  S: 'しっかり備え',
+  L: 'みがる',
+  F: '先どり',
+  N: 'いま満喫',
 };
 
-// タイプ別の名言（16種・すべて前向き）
-const QUOTES = {
-  軍師リス: 'どんぐり1つにも作戦がある。森の設計図は、もう頭の中。',
-  庭師リス: '埋めたどんぐりに毎日水をやる。急がない、でも止まらない。',
-  冒険家リス: '埋めた場所を忘れても大丈夫。いつか森になってるから。',
-  詩人リス: 'どんぐりが芽を出す音を、聞いたことがある気がする。',
-  軍師ハムスター: 'ほお袋の中身は全部把握済み。備えあれば、憂いなし。',
-  庭師ハムスター: '今日もコツコツ、ほお袋に一粒。積み重ねがいちばん強い。',
-  冒険家ハムスター: 'ほお袋いっぱいの安心を持って、どこへでも行ける。',
-  詩人ハムスター: 'たくわえは、未来の自分への手紙みたいなもの。',
-  軍師ミツバチ: 'どの花にいつ行くか、飛ぶ前に決めてる。効率は羽の一部。',
-  庭師ミツバチ: '花から花へ、ちょうどいいペースで。蜜は焦らず貯まる。',
-  冒険家ミツバチ: '知らない花畑ほど、いい蜜がある。今日も初めての道へ。',
-  詩人ミツバチ: '働いているつもりはない。花が好きなだけ。',
-  軍師カピバラ: 'のんびりして見えて、温泉の予約は3ヶ月先まで完璧。',
-  庭師カピバラ: 'あわてない、あわてない。育つものは、ちゃんと育つ。',
-  冒険家カピバラ: '流されてるんじゃない。流れを選んでるんだ。',
-  詩人カピバラ: 'お湯につかって考えた。足るを知る者は、あったかい。',
+// 16タイプ定義（イラストは新規制作中。それまでは絵文字が代役）
+const TYPES = {
+  CGSF: {
+    name: '森をつくるビーバー',
+    emoji: '🦫',
+    hitokoto: '未来の森を、設計図つきで育てる建築家。',
+    tsuyomi: '貯める・育てる・備える・先どり、全部そろった安定感。資産寿命が最も伸びやすい型。',
+    nobashi: '完璧ゆえに頑張りすぎ注意。「使う楽しみ」も予算に入れると長続きする。',
+  },
+  CGSN: {
+    name: '実りわけのリス',
+    emoji: '🐿️',
+    hitokoto: 'どんぐりを蓄えながら、今日のぶんもちゃんと味わう。',
+    tsuyomi: '貯めて育てて備えたうえで、余りは今の暮らしに。メリハリの達人。',
+    nobashi: '余剰の一部だけ自動積立にすると、迷わず未来にも回せる。',
+  },
+  CGLF: {
+    name: '風にのるワシ',
+    emoji: '🦅',
+    hitokoto: '身軽な装備で、高く遠くへ飛ぶ。',
+    tsuyomi: '現金を寝かせず効率よく増やす攻めの飛行力。',
+    nobashi: '急な向かい風（臨時出費）用に、現金のとまり木を数ヶ月分そなえると安心。',
+  },
+  CGLN: {
+    name: '好奇心のキツネ',
+    emoji: '🦊',
+    hitokoto: '面白そうな方へ、貯めた力で踏み込める。',
+    tsuyomi: '貯める力と攻める感覚の両立。チャンスに強い。',
+    nobashi: '勘の良さに「自動積立」という保険をかけると無敵に近づく。',
+  },
+  CMSF: {
+    name: '石橋をわたるカメ',
+    emoji: '🐢',
+    hitokoto: 'ゆっくり、でも絶対に進む。',
+    tsuyomi: '現金の厚い甲羅と先どり貯金。何が起きても崩れない。',
+    nobashi: '備えが十分なら、余剰の一部をつみたて投資に。甲羅は軽くならない。',
+  },
+  CMSN: {
+    name: '冬支度のクマ',
+    emoji: '🐻',
+    hitokoto: 'たっぷり蓄えて、今の季節もちゃんと楽しむ。',
+    tsuyomi: '厚い備えと生活の満足度を両立できる懐の深さ。',
+    nobashi: '蓄えの置き場所を見直すと、蓄えが自分で育ち始める。',
+  },
+  CMLF: {
+    name: 'はたらきもののアリ',
+    emoji: '🐜',
+    hitokoto: '毎日コツコツ、列を乱さず未来へ運ぶ。',
+    tsuyomi: '先どりの積立習慣。仕組みで貯められる強さ。',
+    nobashi: '巣の食料（現金の備え）を先に数ヶ月分。そこから先は育てる番。',
+  },
+  CMLN: {
+    name: 'しなやかなネコ',
+    emoji: '🐈',
+    hitokoto: '身軽に暮らして、必要なぶんはちゃんと残す。',
+    tsuyomi: 'ムダのない家計。固定費が軽く、変化に強い。',
+    nobashi: '残せる力があるので、行き先（積立先・備え）を決めてあげるだけで一気に伸びる。',
+  },
+  YGSF: {
+    name: '波間のイルカ',
+    emoji: '🐬',
+    hitokoto: '楽しみながら、ちゃんと沖（未来）も見ている。',
+    tsuyomi: '今の生活を大切にしつつ、投資と積立は仕組みで継続。',
+    nobashi: '支出をあと少し整えると、同じ暮らしのまま積立余力が生まれる。',
+  },
+  YGSN: {
+    name: 'おおらかなゾウ',
+    emoji: '🐘',
+    hitokoto: '大きな安心を背に、ゆったり歩く。',
+    tsuyomi: '厚い備えと育てる資産を持ちながら、今を我慢しない度量。',
+    nobashi: '毎月の「余り」を先どりに変えるだけで、歩みがさらに確かになる。',
+  },
+  YGLF: {
+    name: '波乗りのペンギン',
+    emoji: '🐧',
+    hitokoto: '小さな体で、大きな海に漕ぎ出している。',
+    tsuyomi: '先どり積立と投資への一歩をすでに踏み出している行動力。',
+    nobashi: '氷の上の休憩所（現金の備え）を少しずつ。波に乗り続けるための足場になる。',
+  },
+  YGLN: {
+    name: '自由なカモメ',
+    emoji: '🐦',
+    hitokoto: '風まかせに見えて、飛び方は自分で選んでいる。',
+    tsuyomi: '経験や挑戦にお金を使える柔軟さ。攻めの感覚もある。',
+    nobashi: '月1回の「きろく帳」だけ習慣にすると、自由なまま現在地がわかる。',
+  },
+  YMSF: {
+    name: '見守りのフクロウ',
+    emoji: '🦉',
+    hitokoto: '夜でも遠くまで見えている、慎重な賢者。',
+    tsuyomi: '厚い備えと先どり習慣。守りの完成度が高い。',
+    nobashi: '備えは十分。ほんの一部を「育つ場所」に移すと、見守る楽しみが増える。',
+  },
+  YMSN: {
+    name: 'あったかコアラ',
+    emoji: '🐨',
+    hitokoto: '安心の木の上で、たいせつな時間をゆっくり過ごす。',
+    tsuyomi: '現金の備えが厚く、暮らしの満足度も高い。心の安定型。',
+    nobashi: '木の実（余剰）が出た月だけでも積立に回すと、木がもう1本育つ。',
+  },
+  YMLF: {
+    name: '芽吹きのヒヨコ',
+    emoji: '🐥',
+    hitokoto: 'まだ小さくても、もう歩き出している。',
+    tsuyomi: '先どりの意志がある。ここからの伸びしろが16タイプで一番大きい。',
+    nobashi: 'まず生活防衛資金を少しずつ。土ができれば芽はすぐ伸びる。',
+  },
+  YMLN: {
+    name: 'ひなたのカピバラ',
+    emoji: '🦦',
+    hitokoto: '今この時間をいちばん大切にできる名人。',
+    tsuyomi: '日々を楽しむ力はお金に換えられない資産。ストレスの少ない家計。',
+    nobashi: '楽しみはそのままに、「先取り1,000円」から。小さく始めるのがカピバラ流。',
+  },
 };
 
-// 専用アート到着までのプレースホルダー（assets/types/ に置けば自動で置き換わる）
-const PLACEHOLDER_IMG = {
-  squirrel: 'assets/bear-watering.png',
-  hamster: 'assets/bear-thumbs.png',
-  bee: 'assets/bird-pink.png',
-  capybara: 'assets/bear.png',
-};
+const num = (v) => (Number.isFinite(v) && v > 0 ? v : 0);
 
-// 4軸の判定（入力とKPIから。すべて実データ由来）
-export function deriveAxes(kpis, params) {
-  const income = params.annualIncome;
-  const surplus = income - params.annualExpense;
-  const savingsRate = income > 0 ? surplus / income : 1; // 収入0(FIRE)は蓄え型とみなす
-  const investShare = surplus > 0 ? (params.monthlyInvest * 12) / surplus : 0;
-  const planned =
-    (params.children?.length ?? 0) + (params.events?.length ?? 0) + (params.loanMonthly > 0 ? 1 : 0);
-  const bigDream =
-    income > 0 ? params.targetAmount >= income * 15 : params.targetAmount >= 100000000;
+// 入力値のみから4文字コードを判定（質問なし・ゼロ除算は必ずガード）
+export function judgeType(params = {}) {
+  const monthlyIncome = num(params.annualIncome) / 12;
+  const monthlyExpense = num(params.annualExpense) / 12;
+  const invested = num(params.investedAsset);
+  const total = Math.max(num(params.totalAsset), invested);
+  const cash = total - invested;
+  const monthlyInvest = num(params.monthlyInvest);
 
+  // 軸1 ため力: 収入0は判定不能 → Y に倒す
+  const surplus = monthlyIncome - monthlyExpense;
+  const a1 = monthlyIncome > 0 && surplus / monthlyIncome >= THRESHOLDS.savingsRate ? 'C' : 'Y';
+
+  // 軸2 そだて方: 総資産0 → M に倒す
+  const a2 = total > 0 && invested / total >= THRESHOLDS.investRatio ? 'G' : 'M';
+
+  // 軸3 そなえ: 支出0 → S に倒す（内部では999ヶ月でキャップ）
+  const bufferMonths = monthlyExpense > 0 ? Math.min(cash / monthlyExpense, 999) : 999;
+  const a3 = bufferMonths >= THRESHOLDS.bufferMonths ? 'S' : 'L';
+
+  // 軸4 しこみ: 余剰0以下は「積立していれば F（赤字でも先どり=強い意志）」
+  const a4 =
+    surplus > 0
+      ? monthlyInvest / surplus >= THRESHOLDS.commitRate
+        ? 'F'
+        : 'N'
+      : monthlyInvest > 0
+        ? 'F'
+        : 'N';
+
+  const code = a1 + a2 + a3 + a4;
   return {
-    flow: savingsRate >= 0.2 ? 'ためる' : 'まわす',
-    grow: investShare >= 0.5 || params.expectedReturn >= 6 ? 'そだてる' : 'まもる',
-    plan: planned > 0 ? '地図' : 'コンパス',
-    dream: bigDream ? '大志' : '満ち足り',
+    code,
+    tags: [...code].map((c) => AXIS_LABELS[c]),
+    ...TYPES[code],
   };
 }
 
-// 16タイプ診断
-export function diagnoseType(kpis, params) {
-  const axes = deriveAxes(kpis, params);
-  const animal = Object.values(ANIMALS).find((a) => a.flow === axes.flow && a.grow === axes.grow);
-  const persona = Object.values(PERSONAS).find((p) => p.plan === axes.plan && p.dream === axes.dream);
-  const name = `${persona.label}${animal.label}`;
-  return {
-    animal,
-    persona,
-    name,
-    tags: [axes.flow, axes.grow, axes.plan, axes.dream],
-    quote: QUOTES[name],
-    img: `assets/types/${animal.id}-${persona.id}.png`,
-    placeholder: PLACEHOLDER_IMG[animal.id],
-  };
-}
-
-// 16タイプすべての一覧（図鑑ページ用）
+// 図鑑用: 16タイプすべて（仕様書の並び順）
 export function allTypes() {
-  const types = [];
-  for (const persona of Object.values(PERSONAS)) {
-    for (const animal of Object.values(ANIMALS)) {
-      const name = `${persona.label}${animal.label}`;
-      types.push({
-        animal,
-        persona,
-        name,
-        tags: [animal.flow, animal.grow, persona.plan, persona.dream],
-        quote: QUOTES[name],
-        img: `assets/types/${animal.id}-${persona.id}.png`,
-        placeholder: PLACEHOLDER_IMG[animal.id],
-      });
-    }
-  }
-  return types;
+  return Object.entries(TYPES).map(([code, t]) => ({
+    code,
+    tags: [...code].map((c) => AXIS_LABELS[c]),
+    ...t,
+  }));
 }
 
-// シェア文（金額なし・タイプ名と4タグ入り）
-export function buildShareText(kpis, params) {
-  const t = diagnoseType(kpis, params);
-  return `私のお金の性格は【${t.name}】でした🌰（${t.tags.join('×')}）あなたは16タイプのどれ？ #ミラため性格診断 #ミラため`;
+// シェア文（仕様§4のテンプレート・金額なし。URLはシェアAPI側で別添え）
+export function buildShareText(type) {
+  return `私のお金の性格は『${type.name}』でした🌱 あなたの資産寿命とお金の性格が30秒でわかる #ミラため`;
 }
-
-const loadImg = (src) =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
 
 const FONT = '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif';
 
 function drawTag(ctx, text, cx, y) {
-  ctx.font = `700 26px ${FONT}`;
-  const w = ctx.measureText(text).width + 36;
+  ctx.font = `700 24px ${FONT}`;
+  const w = ctx.measureText(text).width + 32;
   ctx.fillStyle = '#fdeef1';
   ctx.beginPath();
-  ctx.roundRect(cx - w / 2, y - 26, w, 44, 22);
+  ctx.roundRect(cx - w / 2, y - 24, w, 42, 21);
   ctx.fill();
   ctx.strokeStyle = '#f0a3b4';
   ctx.lineWidth = 2;
@@ -135,9 +212,8 @@ function drawTag(ctx, text, cx, y) {
   return w;
 }
 
-// 診断カード（1200×630）
-export async function renderShareCard(kpis, params) {
-  const type = diagnoseType(kpis, params);
+// 診断カード（1200×630）。イラスト到着までは絵文字が代役のテキストカード
+export async function renderShareCard(type) {
   const W = 1200;
   const H = 630;
   const canvas = document.createElement('canvas');
@@ -164,57 +240,53 @@ export async function renderShareCard(kpis, params) {
   ctx.textAlign = 'center';
 
   ctx.fillStyle = '#c96079';
-  ctx.font = `700 38px ${FONT}`;
-  ctx.fillText('ミラため性格診断', textCenterX, 150);
+  ctx.font = `700 36px ${FONT}`;
+  ctx.fillText('ミラため性格診断', textCenterX, 140);
+
+  // 4文字コードのチップ
+  ctx.font = `700 26px ${FONT}`;
+  const codeText = type.code.split('').join('-');
+  const cw = ctx.measureText(codeText).width + 44;
+  ctx.fillStyle = '#f7efd0';
+  ctx.beginPath();
+  ctx.roundRect(textCenterX - cw / 2, 162, cw, 44, 22);
+  ctx.fill();
+  ctx.fillStyle = '#8a6f4a';
+  ctx.fillText(codeText, textCenterX, 192);
 
   ctx.fillStyle = '#5c4a44';
-  ctx.font = `700 76px ${FONT}`;
-  ctx.fillText(`【${type.name}】`, textCenterX, 252);
+  ctx.font = `700 60px ${FONT}`;
+  ctx.fillText(type.name, textCenterX, 288);
 
   // 4タグ（中央寄せで横並び）
-  ctx.font = `700 26px ${FONT}`;
-  const gaps = 14;
-  const widths = type.tags.map((t) => ctx.measureText(t).width + 36);
+  ctx.font = `700 24px ${FONT}`;
+  const gaps = 12;
+  const widths = type.tags.map((t) => ctx.measureText(t).width + 32);
   const totalW = widths.reduce((a, b) => a + b, 0) + gaps * 3;
   let x = textCenterX - totalW / 2;
   for (let i = 0; i < type.tags.length; i++) {
-    drawTag(ctx, type.tags[i], x + widths[i] / 2, 316);
+    drawTag(ctx, type.tags[i], x + widths[i] / 2, 352);
     x += widths[i] + gaps;
   }
 
-  // 名言（「。」で2行に割る）
   ctx.fillStyle = '#8a6f66';
-  ctx.font = `500 30px ${FONT}`;
-  const parts = type.quote.split('。').filter(Boolean);
-  const line1 = `${parts[0]}。`;
-  const line2 = parts.length > 1 ? `${parts.slice(1).join('。')}。` : '';
-  ctx.fillText(line1, textCenterX, 396);
-  if (line2) ctx.fillText(line2, textCenterX, 442);
+  ctx.font = `500 28px ${FONT}`;
+  ctx.fillText(type.hitokoto, textCenterX, 424);
 
   ctx.fillStyle = '#c96079';
-  ctx.font = `700 32px ${FONT}`;
-  ctx.fillText('あなたは16タイプのどれ？', textCenterX, 500);
+  ctx.font = `700 30px ${FONT}`;
+  ctx.fillText('あなたは16タイプのどれ？', textCenterX, 486);
 
-  // タイプのキャラ（専用アート優先・なければプレースホルダー）
-  try {
-    let img;
-    try {
-      img = await loadImg(type.img);
-    } catch {
-      img = await loadImg(type.placeholder);
-    }
-    const box = { x: 810, y: 120, w: 320, h: 330 };
-    const scale = Math.min(box.w / img.width, box.h / img.height);
-    const dw = img.width * scale;
-    const dh = img.height * scale;
-    ctx.drawImage(img, box.x + (box.w - dw) / 2, box.y + (box.h - dh) / 2, dw, dh);
-  } catch {
-    /* テキストだけでも成立 */
-  }
+  // 右側: 絵文字の代役キャラ（イラスト制作中）
+  ctx.font = '190px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.fillText(type.emoji, 960, 330);
+  ctx.fillStyle = '#b9a49b';
+  ctx.font = `500 20px ${FONT}`;
+  ctx.fillText('（イラスト準備中）', 960, 410);
 
   ctx.fillStyle = '#a2887f';
   ctx.font = `500 28px ${FONT}`;
-  ctx.fillText('ミラため — 未来のために、貯めて育てる。', W / 2, H - 62);
+  ctx.fillText('ミラため — 未来のために、貯めて育てる', W / 2, H - 62);
   ctx.font = `500 24px ${FONT}`;
   ctx.fillText('kyuusaku16-a11y.github.io/miratame', W / 2, H - 26);
 

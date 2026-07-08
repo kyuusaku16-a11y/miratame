@@ -1,91 +1,96 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deriveAxes, diagnoseType, buildShareText, allTypes, ANIMALS, PERSONAS } from '../src/share.js';
+import { THRESHOLDS, judgeType, allTypes, buildShareText } from '../src/share.js';
 
+// 月収40万・月支出24万（貯蓄率40%）・現金700万/投資300万（投資比率30%）
+// 防衛月数 700/24≒29ヶ月・積立3万/余剰16万（強度19%）
 const base = {
-  currentAge: 35, annualIncome: 5000000, annualExpense: 3000000,
-  monthlyInvest: 50000, expectedReturn: 5, targetAmount: 100000000,
-  endAge: 100, children: [], events: [], loanMonthly: 0,
+  annualIncome: 4800000,
+  annualExpense: 2880000,
+  totalAsset: 10000000,
+  investedAsset: 3000000,
+  monthlyInvest: 30000,
 };
-const kpis = { survivesToEnd: true, lifetimeAge: null, targetAge: 65 };
 
-test('deriveAxes: 貯蓄率20%以上は「ためる」・未満は「まわす」', () => {
-  assert.equal(deriveAxes(kpis, base).flow, 'ためる'); // 40%
-  assert.equal(deriveAxes(kpis, { ...base, annualExpense: 4200000 }).flow, 'まわす'); // 16%
+test('judgeType: 基準ケースは C-?-S-N 系で4文字コードを返す', () => {
+  const t = judgeType(base);
+  assert.match(t.code, /^[CY][GM][SL][FN]$/);
+  assert.equal(t.code[0], 'C'); // 貯蓄率40% >= 20%
+  assert.equal(t.code[2], 'S'); // 防衛29ヶ月 >= 6
+  assert.equal(t.code[3], 'N'); // 積立強度19% < 50%
+  assert.ok(t.name);
+  assert.ok(t.hitokoto);
+  assert.ok(t.tsuyomi);
+  assert.ok(t.nobashi);
 });
 
-test('deriveAxes: 余剰の半分以上を投資 or 利回り6%以上は「そだてる」', () => {
-  assert.equal(deriveAxes(kpis, { ...base, monthlyInvest: 100000 }).grow, 'そだてる'); // 60%投資
-  assert.equal(deriveAxes(kpis, { ...base, expectedReturn: 7 }).grow, 'そだてる');
-  assert.equal(deriveAxes(kpis, base).grow, 'まもる'); // 30%投資・5%
+test('judgeType: 4軸のしきい値境界', () => {
+  // 軸1 貯蓄率: ちょうど20%はC
+  const c = judgeType({ ...base, annualExpense: 4800000 * 0.8 });
+  assert.equal(c.code[0], 'C');
+  const y = judgeType({ ...base, annualExpense: 4800000 * 0.81 });
+  assert.equal(y.code[0], 'Y');
+  // 軸2 投資比率: ちょうど30%はG
+  assert.equal(judgeType(base).code[1], 'G');
+  assert.equal(judgeType({ ...base, investedAsset: 2900000 }).code[1], 'M');
+  // 軸3 防衛月数: 現金がちょうど6ヶ月分でS・下回るとL
+  const sixMonths = ((4800000 * 0.6) / 12) * 6; // 月支出24万×6
+  assert.equal(judgeType({ ...base, totalAsset: 3000000 + sixMonths }).code[2], 'S');
+  assert.equal(judgeType({ ...base, totalAsset: 3000000 + sixMonths - 10000 }).code[2], 'L');
+  // 軸4 積立強度: 余剰16万の50%=月8万でF
+  assert.equal(judgeType({ ...base, monthlyInvest: 80000 }).code[3], 'F');
+  assert.equal(judgeType({ ...base, monthlyInvest: 79000 }).code[3], 'N');
 });
 
-test('deriveAxes: 何か登録していれば「地図」・空なら「コンパス」', () => {
-  assert.equal(deriveAxes(kpis, base).plan, 'コンパス');
-  assert.equal(deriveAxes(kpis, { ...base, children: [{ age: 5 }] }).plan, '地図');
-  assert.equal(deriveAxes(kpis, { ...base, loanMonthly: 100000 }).plan, '地図');
+test('judgeType: エッジケース — 収入0は Y に倒す', () => {
+  const t = judgeType({ ...base, annualIncome: 0 });
+  assert.equal(t.code[0], 'Y');
 });
 
-test('deriveAxes: 目標が年収15倍以上は「大志」', () => {
-  assert.equal(deriveAxes(kpis, base).dream, '大志'); // 1億 = 年収20倍
-  assert.equal(deriveAxes(kpis, { ...base, targetAmount: 30000000 }).dream, '満ち足り');
+test('judgeType: エッジケース — 赤字家計の軸4は積立の有無で決まる', () => {
+  const red = { ...base, annualExpense: 6000000 }; // 支出 > 収入
+  assert.equal(judgeType(red).code[0], 'Y');
+  assert.equal(judgeType({ ...red, monthlyInvest: 10000 }).code[3], 'F'); // 赤字でも先どり=強い意志
+  assert.equal(judgeType({ ...red, monthlyInvest: 0 }).code[3], 'N');
 });
 
-test('diagnoseType: 軸の組み合わせが正しい動物と性格になる', () => {
-  // ためる×まもる×コンパス×大志 = 冒険家ハムスター
-  const t = diagnoseType(kpis, base);
-  assert.equal(t.name, '冒険家ハムスター');
-  assert.deepEqual(t.tags, ['ためる', 'まもる', 'コンパス', '大志']);
-  // まわす×そだてる×地図×満ち足り = 庭師ミツバチ
-  const t2 = diagnoseType(kpis, {
-    ...base, annualExpense: 4200000, expectedReturn: 7,
-    children: [{ age: 5 }], targetAmount: 30000000,
-  });
-  assert.equal(t2.name, '庭師ミツバチ');
+test('judgeType: エッジケース — 総資産0はM・支出0はS・負値や欠損でも壊れない', () => {
+  assert.equal(judgeType({ ...base, totalAsset: 0, investedAsset: 0 }).code[1], 'M');
+  assert.equal(judgeType({ ...base, annualExpense: 0 }).code[2], 'S');
+  const broken = judgeType({ annualIncome: -100, annualExpense: -5 });
+  assert.match(broken.code, /^[CY][GM][SL][FN]$/); // NaNでカードが壊れない
+  for (const v of Object.values(broken)) assert.ok(!String(v).includes('NaN'));
 });
 
-test('16タイプ全てに固有の名言があり、責める言葉を含まない', () => {
-  const seen = new Set();
-  for (const animal of Object.values(ANIMALS)) {
-    for (const persona of Object.values(PERSONAS)) {
-      const params = {
-        ...base,
-        annualExpense: animal.id === 'squirrel' || animal.id === 'hamster' ? 3000000 : 4200000,
-        expectedReturn: animal.id === 'squirrel' || animal.id === 'bee' ? 7 : 3,
-        monthlyInvest: 10000,
-        children: persona.id === 'strategist' || persona.id === 'gardener' ? [{ age: 5 }] : [],
-        targetAmount: persona.id === 'strategist' || persona.id === 'adventurer' ? 100000000 : 30000000,
-      };
-      const t = diagnoseType(kpis, params);
-      assert.equal(t.name, `${persona.label}${animal.label}`);
-      assert.ok(t.quote.length >= 15, `${t.name} の名言が短すぎ`);
-      assert.ok(!seen.has(t.quote), `${t.name} の名言が重複`);
-      seen.add(t.quote);
-      for (const ng of ['ダメ', '不足', '危険', '失敗', '浪費']) {
-        assert.ok(!t.quote.includes(ng), `${t.name} に責める語`);
-      }
-    }
-  }
-  assert.equal(seen.size, 16);
-});
-
-test('buildShareText: タイプ名・4タグ入り、金額なし', () => {
-  const t = buildShareText(kpis, base);
-  assert.ok(t.includes('冒険家ハムスター'));
-  assert.ok(t.includes('ためる') && t.includes('大志'));
-  assert.ok(!t.includes('万円') && !t.includes('億円'));
-  assert.ok(t.includes('#ミラため'));
-});
-
-test('allTypes: 16タイプすべて・名前と名言はユニーク', () => {
+test('allTypes: 16タイプすべてユニークで4点セットが揃っている', () => {
   const types = allTypes();
   assert.equal(types.length, 16);
+  assert.equal(new Set(types.map((t) => t.code)).size, 16);
   assert.equal(new Set(types.map((t) => t.name)).size, 16);
-  assert.equal(new Set(types.map((t) => t.quote)).size, 16);
   for (const t of types) {
-    assert.equal(t.tags.length, 4);
-    assert.ok(t.img.startsWith('assets/types/'));
-    assert.ok(t.placeholder.startsWith('assets/'));
-    assert.ok(!/[0-9０-９]+万円/.test(t.quote));
+    assert.match(t.code, /^[CY][GM][SL][FN]$/);
+    assert.ok(t.hitokoto.length > 0);
+    assert.ok(t.tsuyomi.length > 0);
+    assert.ok(t.nobashi.length > 0);
+    // 責めない・断定しない（のばしどころは提案の口調）
+    assert.ok(!t.nobashi.includes('べき'));
+    // 金額の推奨を書かない（万円単位の推奨は不可）
+    assert.ok(!/[0-9０-９]+万円/.test(t.nobashi));
   }
+});
+
+test('buildShareText: 仕様のテンプレート・金額なし', () => {
+  const text = buildShareText(judgeType(base));
+  assert.ok(text.includes('私のお金の性格は『'));
+  assert.ok(text.includes('#ミラため'));
+  assert.ok(text.includes('30秒'));
+  assert.ok(!/[0-9０-９]+万円/.test(text));
+  assert.ok(!text.includes('億'));
+});
+
+test('THRESHOLDS: 1箇所に定数として定義されている（チューニング用）', () => {
+  assert.equal(THRESHOLDS.savingsRate, 0.2);
+  assert.equal(THRESHOLDS.investRatio, 0.3);
+  assert.equal(THRESHOLDS.bufferMonths, 6);
+  assert.equal(THRESHOLDS.commitRate, 0.5);
 });

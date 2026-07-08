@@ -6,7 +6,7 @@ import { fmtMoney, manToYen, yenToMan } from './format.js';
 import { deriveValidation } from './validation.js';
 import { buildReaction } from './reactions.js';
 import { buildSchedule } from './schedule.js';
-import { buildShareText, renderShareCard } from './share.js';
+import { judgeType, buildShareText, renderShareCard } from './share.js';
 import { buildAdvice, buildNarrativeReport, findEducationPeak } from './advice.js';
 import {
   loadHistory,
@@ -1240,21 +1240,23 @@ async function openShareDialog() {
     return;
   }
   trackEvent('diagnosis');
-  const params = paramsOf(state);
-  const series = projectAssets(params, params.expectedReturn / 100);
-  const kpis = deriveKpis(series, params);
-  const text = buildShareText(kpis, params);
+  const type = judgeType(paramsOf(state));
+  trackEvent(`type-${type.code}`); // タイプ分布の計測（しきい値チューニング用）
+  const text = buildShareText(type);
   const url = 'https://kyuusaku16-a11y.github.io/miratame/';
 
-  const canvas = await renderShareCard(kpis, params);
+  const canvas = await renderShareCard(type);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   currentShare = {
     blob,
     file: new File([blob], 'miratame.png', { type: 'image/png' }),
     text,
     url,
+    code: type.code,
   };
   $('shareCardImg').src = canvas.toDataURL('image/png');
+  $('shareTsuyomi').textContent = type.tsuyomi;
+  $('shareNobashi').textContent = type.nobashi;
   $('shareDialog').showModal();
 }
 
@@ -1262,6 +1264,7 @@ async function openShareDialog() {
 async function doShare() {
   if (!currentShare) return;
   trackEvent('share');
+  if (currentShare.code) trackEvent(`type-share-${currentShare.code}`);
   const { file, text, url } = currentShare;
   if (navigator.canShare?.({ files: [file] })) {
     try {

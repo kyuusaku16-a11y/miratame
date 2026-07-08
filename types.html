@@ -37,9 +37,9 @@
       <article class="panel guide-body">
         <p><a class="guide-back" href="./">← シミュレーターにもどる</a></p>
         <p>
-          お金の性格は「ためる/まわす」「そだてる/まもる」で決まる<strong>動物4種</strong>と、
-          「地図/コンパス」「大志/満ち足り」で決まる<strong>性格4種</strong>のかけ合わせで、ぜんぶで16タイプ。
-          どのタイプにも、いいところしかありません。
+          あなたの入力から<strong>「ため力」「そだて方」「そなえ」「しこみ」</strong>の4つの軸を読み取って、
+          16タイプの動物に当てはめます。質問はゼロ、答えは実際の家計だから正直。
+          どのタイプにも、いいところしかありません。数字を変えるとタイプも進化します。
         </p>
         <div class="type-grid" id="typeGrid"></div>
         <p class="guide-cta"><a href="./?diagnose=1">🌰 自分のタイプを診断する（無料・30秒）</a></p>
@@ -57,11 +57,12 @@
       for (const t of allTypes()) {
         const card = document.createElement('div');
         card.className = 'type-card';
-        const img = document.createElement('img');
-        img.src = t.img;
-        img.alt = t.name;
-        img.loading = 'lazy';
-        img.addEventListener('error', () => { img.src = t.placeholder; }, { once: true });
+        const emoji = document.createElement('span');
+        emoji.className = 'type-emoji';
+        emoji.textContent = t.emoji;
+        const code = document.createElement('span');
+        code.className = 'type-code';
+        code.textContent = t.code.split('').join('-');
         const name = document.createElement('strong');
         name.textContent = t.name;
         const tags = document.createElement('p');
@@ -69,8 +70,8 @@
         tags.textContent = t.tags.join('×');
         const quote = document.createElement('p');
         quote.className = 'type-quote';
-        quote.textContent = `「${t.quote}」`;
-        card.append(img, name, tags, quote);
+        quote.textContent = `「${t.hitokoto}」`;
+        card.append(emoji, code, name, tags, quote);
         grid.appendChild(card);
       }
     </script>

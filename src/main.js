@@ -114,7 +114,16 @@ function nearGoalText(months) {
   return m === 0 ? `あと${y}年ちょうど` : `あと${y}年${m}ヶ月`;
 }
 
-function renderKpis(kpis, params, { near = false, assets5y = null, goalMonths = null } = {}) {
+function renderKpis(kpis, params, { near = false, assets5y = null, goalMonths = null, masked = false } = {}) {
+  if (masked) {
+    // 初回ベール中: 答えは「めくってのお楽しみ」
+    for (const id of ['kpi-current', 'kpi-final', 'kpi-target']) $(id).textContent = '？';
+    $('kpi-lifetime').textContent = '？歳まで';
+    $('kpi-lifetime').classList.remove('warn');
+    $('lifetimeBarValue').textContent = '？歳まで';
+    $('lifetimeBarValue').classList.remove('warn');
+    return;
+  }
   $('kpi-current').textContent = fmtMoney(kpis.currentAssets);
   const life = $('kpi-lifetime');
   const bar = $('lifetimeBarValue');
@@ -653,6 +662,7 @@ function update({ withReaction = false, light = false } = {}) {
   withScrollAnchor(() => {
     renderKpis(kpis, params, {
       near,
+      masked: veiled,
       assets5y: mainSeries[5]?.assets ?? null,
       goalMonths: near ? monthsToTarget(mainSeries, params.targetAmount) : null,
     });
@@ -764,7 +774,9 @@ function init() {
   // 保存データが無い＝初めての訪問。診断バナーを見せる判定は loadState より先に取る
   let firstVisit = false;
   try {
-    firstVisit = !localStorage.getItem('money-vision-state') && !localStorage.getItem('mv-hero-done');
+    const isNewVisitor = !localStorage.getItem('money-vision-state');
+    firstVisit = isNewVisitor && !localStorage.getItem('mv-hero-done');
+    veiled = isNewVisitor && !localStorage.getItem('mv-revealed');
   } catch {
     /* localStorage 不可なら常に非表示 */
   }
@@ -780,6 +792,7 @@ function init() {
   for (const f of FIELDS)
     $(f.id).addEventListener('input', (e) => {
       anchorEl = e.target;
+      noteVeilEdit(f.id);
       onType();
     });
 
@@ -790,6 +803,7 @@ function init() {
     const f = fieldOf(id);
     $(`${id}Slider`).addEventListener('input', (e) => {
       anchorEl = e.target;
+      noteVeilEdit(id);
       $(id).value = toUi(f, Number(e.target.value));
       update({ light: true });
       heavyUpdate();
@@ -813,6 +827,12 @@ function init() {
     trackEvent('jump-form');
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
+  if (veiled) $('chartVeil').hidden = false;
+  $('veilJumpBtn').addEventListener('click', () => {
+    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
+  });
+  $('veilRevealBtn').addEventListener('click', () => revealResults(false));
+  $('veilSampleBtn').addEventListener('click', () => revealResults(true));
   if (firstVisit) $('diagnosisHero').hidden = false;
   $('heroDiagnoseBtn').addEventListener('click', () => {
     try {
@@ -935,6 +955,46 @@ function init() {
 
 // 感想・要望フォームのURL（用意できたらここに貼るだけでフッターに現れる）
 const FEEDBACK_URL = '';
+
+// 初回訪問のベール（結果を自分でめくる演出）
+let veiled = false;
+const veilEdited = new Set();
+
+function noteVeilEdit(fieldId) {
+  if (!veiled) return;
+  veilEdited.add(fieldId);
+  if (veilEdited.size >= 2) {
+    $('veilJumpBtn').hidden = true;
+    $('veilRevealBtn').hidden = false;
+  }
+}
+
+function revealResults(fromSample = false) {
+  if (!veiled) return;
+  veiled = false;
+  try {
+    localStorage.setItem('mv-revealed', '1');
+  } catch {
+    /* ignore */
+  }
+  trackEvent(fromSample ? 'veil-sample' : 'veil-reveal');
+  const veil = $('chartVeil');
+  veil.classList.add('lifting');
+  setTimeout(() => {
+    veil.hidden = true;
+  }, 450);
+  update();
+  document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  renderReaction(
+    {
+      type: 'improved',
+      text: fromSample
+        ? 'これはサンプルの未来だよ。数字をあなたのものにすると、自分事になるよ🌱'
+        : 'はじめまして！これがあなたの未来の形だよ🌱 スライダーで動かしてみて',
+    },
+    9000,
+  );
+}
 
 // 匿名イベント計測: 何回使われたかの回数だけをGoatCounterに送る。
 // 入力値・診断結果などの中身は一切送らない（フッターの明記どおり）

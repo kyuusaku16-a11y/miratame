@@ -180,6 +180,15 @@
         </dialog>
 
         <div class="panel chart-wrap">
+          <!-- 初回訪問だけのベール: 結果を「自分でめくる」ごほうびにする -->
+          <div class="chart-veil" id="chartVeil" hidden>
+            <img src="assets/pair-peek.png" alt="" aria-hidden="true" />
+            <p class="veil-title">あなたの資産は、<br />何歳までもつ？</p>
+            <p class="veil-sub">「あなたの数字」を入れると、ここに未来のグラフが現れます</p>
+            <button id="veilJumpBtn" type="button">✏️ 数字を入力する</button>
+            <button id="veilRevealBtn" type="button" hidden>🌱 結果を見る</button>
+            <button id="veilSampleBtn" type="button" class="veil-sample">とりあえずサンプルで見てみる</button>
+          </div>
           <div class="view-toggle" role="group" aria-label="グラフの表示モード">
             <button id="modeLife" type="button">🌳 人生プラン</button>
             <button id="modeNear" type="button">🌱 ちかい目標（5年）</button>

@@ -849,7 +849,7 @@ function init() {
   // スマホでは「これからの大きな支出」を折りたたみ（CSSがスマホ幅でのみ効く）
   $('schedule').classList.add('collapsed');
   $('scheduleToggle').addEventListener('click', () => {
-    if (!matchMedia('(max-width: 720px)').matches) return;
+    if (!matchMedia('(max-width: 940px)').matches) return;
     $('schedule').classList.toggle('collapsed');
   });
 
@@ -898,7 +898,7 @@ function init() {
     /* ignore */
   }
   const inStandalone = matchMedia('(display-mode: standalone)').matches;
-  const onMobile = matchMedia('(max-width: 720px)').matches;
+  const onMobile = matchMedia('(max-width: 940px)').matches;
   if (!firstVisit && onMobile && !inStandalone && !pwaHintDone) $('pwaHint').hidden = false;
   $('pwaHintClose').addEventListener('click', () => {
     try {

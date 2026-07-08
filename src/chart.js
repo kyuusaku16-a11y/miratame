@@ -200,12 +200,12 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       scales: {
         x: {
           // スマホは軸タイトルを省いて描画領域を広げる
-          title:  { display: !matchMedia('(max-width: 720px)').matches, text: '年齢', color: CHART_COLORS.text },
+          title:  { display: !matchMedia('(max-width: 940px)').matches, text: '年齢', color: CHART_COLORS.text },
           ticks:  { maxTicksLimit: 12, color: CHART_COLORS.text },
           grid:   { color: CHART_COLORS.grid },
         },
         y: {
-          title: { display: !matchMedia('(max-width: 720px)').matches, text: '資産額', color: CHART_COLORS.text },
+          title: { display: !matchMedia('(max-width: 940px)').matches, text: '資産額', color: CHART_COLORS.text },
           grid:  { color: CHART_COLORS.grid },
           ticks: {
             color: CHART_COLORS.text,

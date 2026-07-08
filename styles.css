@@ -97,7 +97,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 .results-mid > * { min-width: 0; }
 .results-more { display: flex; flex-direction: column; gap: 20px; grid-column: 1 / -1; }
 .results-more > * { min-width: 0; }
-@media (min-width: 721px) {
+@media (min-width: 941px) {
   .panel.form { grid-row: span 2; } /* 右カラム2段（結果+じっくり系）にまたがる */
   .results-mid { grid-column: 2; }
 }
@@ -207,7 +207,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 .comment-lines { display: flex; flex-direction: column; gap: 8px; }
 .comment-lines p { margin: 0; }
 
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   main { grid-template-columns: 1fr; padding: 12px 16px 32px; }
   /* 結果ファースト: グラフまで→入力→じっくり系の順 */
   .diagnosis-hero { order: 0; }
@@ -236,7 +236,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 
 footer { padding: 8px 32px 28px; }
 footer p { margin: 2px 0; font-size: 11px; color: var(--color-muted); line-height: 1.6; }
-@media (max-width: 720px) { footer { padding: 4px 16px 24px; } }
+@media (max-width: 940px) { footer { padding: 4px 16px 24px; } }
 
 /* ライフイベント（§4.2）: 1行目=イベント名、2行目=年齢・金額の2段組み */
 .event-row {
@@ -325,7 +325,7 @@ footer p { margin: 2px 0; font-size: 11px; color: var(--color-muted); line-heigh
 .sched-row { display: grid; grid-template-columns: 9.5em 1fr; gap: 8px; padding: 6px 0; font-size: 13px; line-height: 1.6; }
 .sched-row + .sched-row { border-top: 1px solid var(--color-line); }
 .sched-when { color: var(--color-muted); font-variant-numeric: tabular-nums; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .sched-row { grid-template-columns: 8em 1fr; gap: 6px; font-size: 12px; }
 }
 
@@ -461,7 +461,7 @@ header .char-img { width: 86px; height: 62px; padding: 6px; }
 .page-chars img { height: 92px; width: auto; }
 .page-chars .pc-flower { height: 48px; }
 
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .greeting { display: none; }
   .chart-char { width: 44px; }
   .page-chars img { height: 64px; }
@@ -577,7 +577,7 @@ header .char-img {
   bottom: 12px;
   width: 92px;
 }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   header { margin: 10px 16px 8px; padding: 10px 14px; min-height: 0; }
   .brand-text h1 { font-size: 19px; }
   header .char-img { width: 74px; height: 52px; padding: 0; }
@@ -623,7 +623,7 @@ header .char-img {
 .comment .comment-lead img,
 .summary-comment .comment-lead img { width: auto; height: auto; max-width: 50px; max-height: 50px; }
 
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .comment,
   .summary-comment .comment { grid-template-columns: 44px minmax(0, 1fr) 88px; }
   .comment.tip { grid-template-columns: minmax(0, 1fr) 88px; }
@@ -648,14 +648,14 @@ header .char-img {
 .comment.tip { grid-template-columns: minmax(0, 1fr); } /* 一番下の電球は削除 */
 .comment.education-note .comment-visual img { max-width: 114px; max-height: 90px; } /* うさぎ +2px */
 .summary-comment .comment-visual img { max-width: 117px; max-height: 93px; } /* ペア +5px */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .comment.tip { grid-template-columns: minmax(0, 1fr); }
   .comment.education-note .comment-visual img { max-width: 84px; max-height: 70px; }
   .summary-comment .comment-visual img { max-width: 87px; max-height: 73px; }
 }
 
 /* ===== モバイル最終調整（最下部ブロックが決定版。個別調整はここに） ===== */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   /* ヘッダー: 帯はコンパクトに、挨拶（吹き出し＋小鳥）は非表示 */
   header { margin: 10px 12px 8px; padding: 10px 14px; min-height: 0; }
   .greeting { display: none; }
@@ -676,12 +676,12 @@ header .char-img {
 
 /* グラフの高さ確保（maintainAspectRatio:false とセット。グラフが主役） */
 .chart-box { position: relative; height: 420px; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .chart-box { height: 330px; }
 }
 
 /* モバイル: カード右のキャラは本文を圧迫するため非表示（本文優先） */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .comment.note .comment-visual,
   .summary-comment .comment-visual { display: none; }
   .comment,
@@ -693,14 +693,14 @@ header .char-img {
 
 /* .comment.note の独自グリッド(60px/1fr/150px)を統一規格に合流させる */
 .comment.note { grid-template-columns: 56px minmax(0, 1fr) 120px; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .comment.note { grid-template-columns: 44px minmax(0, 1fr); }
 }
 
 /* タイトルを大きく見やすく（2026-07-07 ユーザー指定） */
 .brand-text h1 { font-size: 30px; letter-spacing: 0.02em; }
 header .tagline { font-size: 13px; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .brand-text h1 { font-size: 23px; }
   header .tagline { font-size: 11px; }
   header .char-img { width: 68px; height: 52px; }
@@ -711,7 +711,7 @@ header .tagline { font-size: 13px; }
 
 /* 進路コース選択（子どもの行） */
 .child-row select.course { padding: 6px 8px; border: 1px solid var(--color-line); border-radius: 8px; font-size: 12px; color: var(--color-ink); background: #fff; font-family: var(--font-body); max-width: 11em; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .child-row { flex-wrap: wrap; }
   .child-row select.course { max-width: none; flex-basis: 100%; }
 }
@@ -747,7 +747,7 @@ header .tagline { font-size: 13px; }
   white-space: nowrap;
 }
 .diagnosis-hero button:hover { filter: brightness(1.05); }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .diagnosis-hero { flex-wrap: wrap; justify-content: center; text-align: center; }
   .diagnosis-hero .dh-text { flex-basis: 100%; align-items: center; }
 }
@@ -756,7 +756,7 @@ header .tagline { font-size: 13px; }
 .reading { margin-top: 16px; }
 .reading h2 { margin: 0 0 8px; font-size: 17px; font-family: var(--font-display); color: var(--color-ink); }
 .reading-list { margin: 0; padding-left: 18px; }
-@media (min-width: 721px) {
+@media (min-width: 941px) {
   .reading-list { columns: 2; column-gap: 36px; }
   .reading-list li { break-inside: avoid; }
   .updates-list { columns: 2; column-gap: 36px; }
@@ -830,7 +830,7 @@ header .tagline { font-size: 13px; }
 #scenarioMsg { flex-basis: 100%; text-align: center; margin: 2px 0 0; }
 
 /* 解説ページ（guide.html） */
-.guide-main { display: block; max-width: 720px; margin: 0 auto; padding: 8px 20px 40px; }
+.guide-main { display: block; max-width: 940px; margin: 0 auto; padding: 8px 20px 40px; }
 .guide-body { padding: 24px 26px; line-height: 1.9; }
 .guide-body h2 { font-family: var(--font-display); font-size: 19px; color: var(--color-primary-deep); margin: 26px 0 8px; }
 .guide-body h2:first-of-type { margin-top: 6px; }
@@ -875,7 +875,7 @@ footer .footer-link { color: var(--color-primary-deep); }
 .track-body { display: flex; gap: 24px; align-items: flex-start; }
 .track-col { flex: 1; min-width: 0; }
 .track-monthly { border-left: 1px dashed var(--color-line); padding-left: 24px; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .track-body { flex-direction: column; gap: 0; }
   .track-col { width: 100%; }
   .track-monthly { border-left: none; padding-left: 0; border-top: 1px dashed var(--color-line); margin-top: 14px; padding-top: 12px; }
@@ -937,7 +937,7 @@ footer .footer-link { color: var(--color-primary-deep); }
 
 /* スマホ用の資産寿命固定バー（PCは非表示。KPIカードかグラフが見えている間も隠す） */
 .lifetime-bar { display: none; }
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .lifetime-bar {
     position: fixed;
     left: 16px;
@@ -1035,7 +1035,7 @@ footer .footer-link { color: var(--color-primary-deep); }
 }
 
 /* スマホ: 支出カードは横長の行に（縦積み3枚×144pxの間延び対策。ファイル末尾で最優先） */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .expense-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1058,7 +1058,7 @@ footer .footer-link { color: var(--color-primary-deep); }
 }
 
 /* スマホ: 「これからの大きな支出」は折りたたみ（見出しタップで開閉。PCは常時表示） */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   .schedule h2 { cursor: pointer; }
   .schedule h2 .chev { margin-left: auto; }
   .schedule h2 .chev::before { content: '▾'; font-size: 14px; color: var(--color-muted); }
@@ -1068,7 +1068,7 @@ footer .footer-link { color: var(--color-primary-deep); }
 }
 
 /* スマホ: グラフを主役に（ファイル末尾＝最優先） */
-@media (max-width: 720px) {
+@media (max-width: 940px) {
   /* KPI: 資産寿命を大きな1枚+残り3つを小さく1行 → 1画面目にグラフが入る */
   .kpis {
     grid-template-columns: repeat(3, 1fr);

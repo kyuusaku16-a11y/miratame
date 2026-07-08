@@ -568,9 +568,15 @@ header .char-img {
   width: 64px;
 }
 .header-flower-mid {
-  left: 382px;
-  bottom: 15px;
-  width: 86px;
+  /* 絶対配置をやめ、ブランド行の流れに並べる（ボタンと重ならない） */
+  position: static;
+  width: 72px;
+  align-self: flex-end;
+  margin-left: 4px;
+}
+/* 幅が足りないときは、あいさつ吹き出し（絶対配置）を先に諦める */
+@media (max-width: 1120px) {
+  .greeting { display: none; }
 }
 .header-flower-right {
   right: 26px;

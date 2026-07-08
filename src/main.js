@@ -775,8 +775,10 @@ function init() {
   let firstVisit = false;
   try {
     const isNewVisitor = !localStorage.getItem('money-vision-state');
-    firstVisit = isNewVisitor && !localStorage.getItem('mv-hero-done');
     veiled = isNewVisitor && !localStorage.getItem('mv-revealed');
+    // 診断バナーは「自分の数字で結果をめくった後」のごほうび
+    // （数字を入れる前に診断すると全員同じタイプになり冷めるため）
+    firstVisit = !veiled && !!localStorage.getItem('mv-revealed') && !localStorage.getItem('mv-hero-done');
   } catch {
     /* localStorage 不可なら常に非表示 */
   }
@@ -984,6 +986,13 @@ function revealResults(fromSample = false) {
     veil.hidden = true;
   }, 450);
   update();
+  if (!fromSample) {
+    try {
+      if (!localStorage.getItem('mv-hero-done')) $('diagnosisHero').hidden = false;
+    } catch {
+      /* ignore */
+    }
+  }
   document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   renderReaction(
     {

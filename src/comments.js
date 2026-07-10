@@ -36,14 +36,14 @@ export function buildComments(kpis, params, seed = SESSION_SEED) {
   // （総評＝先頭コメントなので、目標到達の褒め言葉が総評にならないように）
   if (!kpis.survivesToEnd && kpis.lifetimeAge !== null) {
     const recovery = kpis.recoversAfterDepletion
-      ? `年金が入ると後半は持ち直す形ですが、その手前の数年が課題です。`
+      ? `年金が入ると後半は持ち直しますが、その手前の期間は資産で支出をまかなえません。`
       : '';
     if (kpis.lifetimeAge < (params.retireAge ?? 65)) {
-      // 退職前に尽きる = はっきり（でも責めずに）注意を伝える
+      // 退職前に尽きる = 事実と打ち手を淡々と伝える（言い訳や過剰な励ましは入れない）
       comments.push({
         type: 'warning',
-        title: 'ここはすこし注意です',
-        text: `いまの支出ペースだと、約${kpis.lifetimeAge}歳で資産がいったん尽きる計算です。${recovery}責めたいわけではなく、支出か積立をすこし整えるだけで変わる数字です。`,
+        title: '約' + kpis.lifetimeAge + '歳で資産が尽きる計算です',
+        text: `いまの収支のままだと、資産は約${kpis.lifetimeAge}歳でいったん尽きます。${recovery}効き方が大きい順に、支出の圧縮・収入の見直し・積立の調整です。下のボタンから数字を動かして確かめられます。`,
         actions: REVIEW_ACTIONS,
       });
     } else {

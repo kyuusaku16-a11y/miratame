@@ -35,14 +35,148 @@ export function findEducationPeak(params) {
   return peakAge === null ? null : { age: peakAge, amount: peak };
 }
 
-// グラフ下の先頭に出す、3〜4行のまとまった診断コメント。
-// 「評価 → 理由 → 山場 → 次の一手」の順で、読めば結果の意味がわかる形にする。
-export function buildNarrativeReport(params, series, kpis, adviceItems = [], seed = SESSION_SEED) {
+// 「お金の一生の時間割」: 資産のピーク・現役の積み上げ・退職後の取り崩し構造・谷と持ち直し。
+// グラフを目で読まないとわからない転換点を、本人の数字で文章化する
+function buildTimelineSection(params, series, kpis) {
   const lines = [];
   const surplus = params.annualIncome - params.annualExpense;
+  const last = series[series.length - 1];
+
+  // 現役の積み上げ（絶対額。率は総合評価側が言う）
+  if (params.currentAge < params.retireAge && surplus > 0) {
+    const tsumitate = params.monthlyInvest > 0 ? `（うち積立に${fmtMoney(params.monthlyInvest * 12)}）` : '';
+    lines.push(`現役のあいだは、年に約${fmtMoney(surplus)}が手元に積み上がっていく計算です${tsumitate}。`);
+  }
+
+  // 目標到達の時期（届く見込みがあるプランだけ）
+  if (params.targetAmount > 0 && kpis.targetAge !== null && kpis.yearsToTarget > 0) {
+    lines.push(`目標の${fmtMoney(params.targetAmount)}には、${kpis.targetAge}歳ごろ（あと${kpis.yearsToTarget}年）に届く見込みです。`);
+  }
+
+  // 資産のピーク
+  let peak = series[0];
+  for (const p of series) if (p.assets > peak.assets) peak = p;
+  if (peak.age >= last.age && kpis.survivesToEnd) {
+    lines.push(`このプランでは、資産は${params.endAge}歳まで増え続ける計算です。「使う楽しみ」を足す余地もありそうです。`);
+  } else if (peak.age <= params.currentAge) {
+    lines.push('資産はいまがいちばん大きく、ここからは蓄えを計画的に使っていく形です。');
+  } else if (peak.assets > 0) {
+    lines.push(
+      `資産のピークは${peak.age}歳ごろで、約${fmtMoney(peak.assets)}。そこまでが「育てる時期」、そこからが「使う時期」です。`
+    );
+  }
+
+  // 退職・年金の取り崩し構造（グラフの傾きの言語化）
+  const loanAnnual = Math.min(Math.max(0, params.loanMonthly ?? 0) * 12, params.annualExpense);
+  const drawPre = Math.round((params.annualExpense - loanAnnual) * params.retiredExpenseRatio);
+  const drawPost = drawPre - params.pensionAnnual;
+  if (drawPre > 0) {
+    if (params.currentAge < params.retireAge) {
+      if (params.pensionStartAge > params.retireAge) {
+        lines.push(
+          drawPost > 0
+            ? `退職（${params.retireAge}歳）から年金開始（${params.pensionStartAge}歳）までは年約${fmtMoney(drawPre)}ずつ、年金開始後は年約${fmtMoney(drawPost)}ずつ蓄えから取り崩す計算です。`
+            : `退職（${params.retireAge}歳）から年金開始（${params.pensionStartAge}歳）までは年約${fmtMoney(drawPre)}ずつの取り崩し。年金が始まれば、日々の支出はその範囲でまかなえる計算です。`
+        );
+      } else {
+        lines.push(
+          drawPost > 0
+            ? `退職（${params.retireAge}歳）からは、年金でまかなえないぶん年約${fmtMoney(drawPost)}ずつを蓄えから取り崩す計算です。`
+            : `退職（${params.retireAge}歳）後は、日々の支出を年金の範囲でまかなえる計算です。蓄えは主に、もしもの備えと楽しみに回せます。`
+        );
+      }
+    } else if (params.pensionStartAge > params.currentAge) {
+      lines.push(
+        `年金開始（${params.pensionStartAge}歳）までは年約${fmtMoney(drawPre)}ずつ、` +
+          (drawPost > 0
+            ? `開始後は年約${fmtMoney(drawPost)}ずつの取り崩しになる計算です。`
+            : '開始後は年金の範囲で日々の支出をまかなえる計算です。')
+      );
+    } else if (drawPost > 0) {
+      lines.push(`年金でまかなえないぶん、年約${fmtMoney(drawPost)}ずつを蓄えから取り崩す計算です。`);
+    }
+  }
+
+  // 最後にいくら残るか（持つプランだけ。「持つ」の中身を金額で見せる）
+  if (kpis.survivesToEnd && kpis.finalAssets > 0) {
+    lines.push(`${params.endAge}歳の時点では、約${fmtMoney(kpis.finalAssets)}が手元に残る計算です。`);
+  }
+
+  // 谷: 一度薄くなってから持ち直すプランは、その転換点を予告する（不安の正体を先に見せる）
+  if (kpis.survivesToEnd) {
+    let valley = null;
+    for (const p of series) {
+      if (p.age <= params.currentAge) continue;
+      if (!valley || p.assets < valley.assets) valley = p;
+    }
+    // 「いまより一度下がってから持ち直す」形だけを谷と呼ぶ（右肩上がりの1年目を誤検出しない）
+    if (
+      valley &&
+      valley.age < last.age &&
+      valley.assets < series[0].assets &&
+      last.assets > valley.assets * 1.2 &&
+      valley.assets < peak.assets * 0.9
+    ) {
+      lines.push(
+        `いちばん薄くなるのは${valley.age}歳ごろ（約${fmtMoney(valley.assets)}）。そこから先は持ち直していく計算なので、この谷さえ見えていれば慌てずにすみます。`
+      );
+    }
+  }
+
+  return { h: 'お金の一生の時間割', lines };
+}
+
+// 「もしもテスト」: 下振れ・長生き・臨時出費の3本を実計算で検査する。
+// 土台のプランが持たない場合は出さない（追い打ちをかけない — §1）
+function buildStressSection(params, kpis) {
+  if (!kpis.survivesToEnd) return null;
+  const lines = [];
+
+  // ① 利回りの下振れ（buildAdviceのヒントと同一文言にして、二重表示を自動排除）
+  if (params.expectedReturn >= 3) {
+    const downRate = params.expectedReturn - 2;
+    const v = { ...params, expectedReturn: downRate };
+    const s = deriveKpis(projectAssets(v, downRate / 100), v);
+    if (s.survivesToEnd) {
+      lines.push(`利回りが${downRate}%に下がっても、資産は${params.endAge}歳まで持つ計算です。下振れにも粘り強いプランです。`);
+    } else if (s.lifetimeAge !== null) {
+      lines.push(`利回りが${downRate}%だと、資産寿命は約${s.lifetimeAge}歳までになります。利回り頼みをへらすなら、積み立てや支出の調整が効きます。`);
+    }
+  }
+
+  // ② 長生きテスト（+5歳）
+  if (params.endAge < 105) {
+    const v = { ...params, endAge: Math.min(params.endAge + 5, 105) };
+    const s = deriveKpis(projectAssets(v, params.expectedReturn / 100), v);
+    lines.push(
+      s.survivesToEnd
+        ? `${v.endAge}歳まで長生きしても、資産は持つ計算です。このプランでは、長寿はリスクではなくごほうびです。`
+        : `${params.endAge}歳までは持ちますが、${v.endAge}歳まで生きた場合は少し足りなくなる計算です。長生きへの備えは、年金の受け取り方や退職時期が効きやすい部分です。`
+    );
+  }
+
+  // ③ 臨時出費テスト（来年100万円）
+  const v = {
+    ...params,
+    events: [...(params.events ?? []), { age: params.currentAge + 1, amount: 1000000, label: '臨時出費' }],
+  };
+  const s = deriveKpis(projectAssets(v, params.expectedReturn / 100), v);
+  lines.push(
+    s.survivesToEnd
+      ? `来年、急な出費が100万円あっても、資産寿命は${params.endAge}歳まで揺らがない計算です。`
+      : `急な出費が100万円あると、後半が少し細くなる計算です。現金の備えを別の置き場所に分けておくと安心です。`
+  );
+
+  return lines.length ? { h: 'もしもテスト', lines } : null;
+}
+
+// グラフ下の先頭に出す診断レポート。
+// 「総合評価 → 時間割 → 山場 → もしもテスト」の章立てで、読めばグラフの意味がわかる形にする
+export function buildNarrativeReport(params, series, kpis, adviceItems = [], seed = SESSION_SEED) {
+  const lines = [];
+  const sections = [];
+  const surplus = params.annualIncome - params.annualExpense;
   const savingsRate = params.annualIncome > 0 ? surplus / params.annualIncome : null;
-  const atRetire = series.find((p) => p.age === params.retireAge);
-  const firstTip = adviceItems.find((a) => a.type === 'tip');
   const peak = findEducationPeak(params);
   const upcomingEvent = (params.events ?? [])
     .filter((e) => e.age > params.currentAge && e.age <= params.endAge)
@@ -82,28 +216,25 @@ export function buildNarrativeReport(params, series, kpis, adviceItems = [], see
     lines.push('年間収支が赤字寄りなので、投資額より先に生活費と収入のバランスを見ると結果が安定しやすいです。');
   }
 
-  if (atRetire && params.retireAge > params.currentAge) {
-    const finalRatio = atRetire.assets > 0 ? kpis.finalAssets / atRetire.assets : 0;
-    if (finalRatio >= 0.8) {
-      lines.push(`${params.retireAge}歳時点では約${fmtMoney(atRetire.assets)}まで育ち、その後も資産を大きく崩さずに進む見込みです。`);
-    } else if (kpis.finalAssets > 0) {
-      lines.push(`${params.retireAge}歳時点では約${fmtMoney(atRetire.assets)}ありますが、退職後は取り崩しが進むため、老後支出の前提が大事です。`);
-    } else {
-      lines.push(`${params.retireAge}歳時点の見込みは約${fmtMoney(atRetire.assets)}です。退職後の支出が続くと後半で資産が薄くなります。`);
-    }
-  }
+  // 章1: お金の一生の時間割
+  const timeline = buildTimelineSection(params, series, kpis);
+  if (timeline.lines.length) sections.push(timeline);
 
+  // 章2: 山場と備え（教育費・イベントがあるときだけ。埋め草で章を作らない）
+  const yamaba = [];
   if (peak) {
-    lines.push(`教育費は${peak.age}歳ごろが山場で、今より年約+${fmtMoney(peak.amount)}の負担を見込んでいます。ここを越えると家計は軽くなります。`);
-  } else if (upcomingEvent) {
-    lines.push(`${upcomingEvent.age}歳の「${upcomingEvent.label || 'イベント'}」で約${fmtMoney(upcomingEvent.amount)}の支出を入れています。大きな支出の年だけ資金繰りを確認しておくと安心です。`);
-  } else if (firstTip) {
-    lines.push(firstTip.text);
-  } else {
-    lines.push('大きな支出予定がない場合でも、年に1回だけ入力を更新すると、現実とのズレを小さくできます。');
+    yamaba.push(`教育費は${peak.age}歳ごろが山場で、今より年約+${fmtMoney(peak.amount)}の負担を見込んでいます。ここを越えると家計は軽くなります。`);
   }
+  if (upcomingEvent) {
+    yamaba.push(`${upcomingEvent.age}歳の「${upcomingEvent.label || 'イベント'}」で約${fmtMoney(upcomingEvent.amount)}の支出を入れています。大きな支出の年だけ資金繰りを確認しておくと安心です。`);
+  }
+  if (yamaba.length) sections.push({ h: '山場と備え', lines: yamaba });
 
-  return { type: 'diagnosis', title: '今回の診断', lines };
+  // 章3: もしもテスト（下振れ・長生き・臨時出費。土台が持たないプランには出さない）
+  const stress = buildStressSection(params, kpis);
+  if (stress) sections.push(stress);
+
+  return { type: 'diagnosis', title: '今回の診断', lines, sections };
 }
 
 // params: paramsOf(state) 相当 / series: メイン系列 / kpis: deriveKpis の結果

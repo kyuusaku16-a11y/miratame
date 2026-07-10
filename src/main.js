@@ -200,13 +200,26 @@ function makeCommentCard(c) {
     t.textContent = c.title;
     content.appendChild(t);
   }
-  if (c.lines?.length) {
+  if (c.lines?.length || c.sections?.length) {
     const lines = document.createElement('div');
     lines.className = 'comment-lines';
-    for (const line of c.lines) {
+    for (const line of c.lines ?? []) {
       const p = document.createElement('p');
       p.textContent = line;
       lines.appendChild(p);
+    }
+    // 章立てレポート（今回の診断）: 小見出し＋本文のくり返し
+    for (const sec of c.sections ?? []) {
+      if (!sec.lines?.length) continue;
+      const h = document.createElement('strong');
+      h.className = 'comment-sec-h';
+      h.textContent = sec.h;
+      lines.appendChild(h);
+      for (const line of sec.lines) {
+        const p = document.createElement('p');
+        p.textContent = line;
+        lines.appendChild(p);
+      }
     }
     content.appendChild(lines);
   } else {
@@ -474,9 +487,10 @@ function renderDiagnosis(report, tips) {
   box.innerHTML = '';
   // 診断カードの挿絵は「芽に水をやるくま」＝資産を育てる世界観
   box.appendChild(makeCommentCard({ ...report, decorImg: 'assets/piyo-search.png' }));
+  const reportLines = [...report.lines, ...(report.sections ?? []).flatMap((s) => s.lines)];
   for (const t of tips) {
     // 診断本文に同じ文を借りているヒントは、二重表示になるのでカード側を出さない
-    if (report.lines.includes(t.text)) continue;
+    if (reportLines.includes(t.text)) continue;
     box.appendChild(makeCommentCard({ ...t, noDecor: true }));
   }
 }

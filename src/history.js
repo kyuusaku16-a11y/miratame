@@ -76,10 +76,17 @@ export function latestRecordBefore(history, ym = monthOf()) {
   return prior.length ? prior[prior.length - 1] : null;
 }
 
+// YYYY-MM → 「7月」/「25年7月」。年が違う記録を並べるときだけ年を添える
+export function ymLabel(ym, withYear = false) {
+  const [y, m] = ym.split('-');
+  return withYear ? `${y.slice(2)}年${Number(m)}月` : `${Number(m)}月`;
+}
+
 // 前回の記録との実額差をシンプルに伝える（難しい月割り計算はしない・責めない）
 export function buildRecordDelta(prev, curr) {
   if (!prev || prev.recordedAsset == null || curr?.recordedAsset == null) return null;
-  const prevMonth = `${Number(prev.ym.split('-')[1])}月`;
+  // 前回が去年以前なら「25年7月」表記にして、今年の同月と紛れないように
+  const prevMonth = ymLabel(prev.ym, prev.ym.slice(0, 4) !== curr.ym.slice(0, 4));
   const diffMan = Math.round((curr.recordedAsset - prev.recordedAsset) / 10000);
   if (Math.abs(diffMan) < 1) {
     return { type: 'improved', text: `前回（${prevMonth}）とほぼ同じ。キープも立派！` };

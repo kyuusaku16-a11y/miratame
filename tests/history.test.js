@@ -10,6 +10,7 @@ import {
   recordStreak,
   latestRecordBefore,
   buildRecordDelta,
+  ymLabel,
   buildYearReview,
   importHistory,
 } from '../src/history.js';
@@ -264,4 +265,18 @@ test('importHistory: 配列以外は既存データを壊さない', () => {
   importHistory({ evil: true }, s);
   importHistory(null, s);
   assert.equal(loadHistory(s).length, 1);
+});
+
+test('buildRecordDelta: 年が違う前回記録には年を添える', () => {
+  const prev = { ym: '2025-07', recordedAsset: 3000000 };
+  const msg = buildRecordDelta(prev, { ym: '2026-07', recordedAsset: 3500000 });
+  assert.ok(msg.text.includes('25年7月'), msg.text);
+  // 同じ年なら月だけ
+  const same = buildRecordDelta({ ym: '2026-06', recordedAsset: 3000000 }, { ym: '2026-07', recordedAsset: 3500000 });
+  assert.ok(same.text.includes('（6月）') && !same.text.includes('年'), same.text);
+});
+
+test('ymLabel: 年を出すかを切り替えられる', () => {
+  assert.equal(ymLabel('2026-07', false), '7月');
+  assert.equal(ymLabel('2025-12', true), '25年12月');
 });

@@ -17,6 +17,7 @@ import {
   recordStreak,
   latestRecordBefore,
   buildRecordDelta,
+  ymLabel,
   buildYearReview,
   importHistory,
   monthOf,
@@ -30,6 +31,7 @@ import {
   dailyQuote,
   loadStamps,
   importStamps,
+  takeMonthlyRecap,
 } from './stamps.js';
 import { UPDATES, NOTE_ARTICLES, COLUMNS } from './updates.js';
 
@@ -925,6 +927,12 @@ function init() {
   syncModeButtons();
 
   renderStamps();
+  // 月が変わって最初に開いたときだけ、先月のスタンプをねぎらう
+  const recap = takeMonthlyRecap();
+  if (recap) {
+    $('stampQuote').textContent = recap;
+    $('stampQuote').hidden = false;
+  }
   $('stampBtn').addEventListener('click', pressStamp);
   $('recordBtn').addEventListener('click', openRecordDialog);
   // ライフプラン表も、数字を入れる前はお楽しみに取っておく
@@ -1250,8 +1258,10 @@ function doRecord() {
   const recs = hist.filter((s) => s.recordedAsset != null).slice(-6);
   const trend = $('recordTrend');
   if (recs.length >= 2) {
+    // 記録が年をまたいだら「25年7月」表記にして、去年の7月と今年の7月を見分けられるように
+    const multiYear = new Set(recs.map((r) => r.ym.slice(0, 4))).size > 1;
     trend.textContent =
-      recs.map((r) => `${Number(r.ym.split('-')[1])}月 ${yenToMan(r.recordedAsset)}`).join(' → ') + '（万円）';
+      recs.map((r) => `${ymLabel(r.ym, multiYear)} ${yenToMan(r.recordedAsset)}`).join(' → ') + '（万円）';
     trend.hidden = false;
   } else {
     trend.hidden = true;

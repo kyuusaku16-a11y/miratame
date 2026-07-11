@@ -72,10 +72,30 @@ const MILESTONES = {
   15: '15個！もう習慣って呼んでいいやつだ🎉',
   20: '20個…！ここまで来る人、なかなかいないよ👑',
   25: '25個！あなたの継続力、ほんもの✨',
+  28: '28個！ほぼ皆勤…この帳面の主だ🌳',
+  30: '30個！今月をほぼ完走、すごいすごい🎊',
+  31: '31個、全日制覇！伝説のスタンプ帳です👑✨',
 };
 
 export function milestoneMessage(count) {
   return MILESTONES[count] ?? null;
+}
+
+// 月替わりの振り返り: 月が変わって最初に開いたとき、先月の個数を一言ねぎらう（1回だけ・責めない）。
+// 先月ゼロなら何も言わない（無言リセットのままにせず、がんばった月だけ声をかける）
+const RECAP_KEY = 'money-vision-stamp-recap';
+export function takeMonthlyRecap(storage = globalThis.localStorage, d = new Date()) {
+  const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+  const count = (loadStamps(storage)[ymOf(prev)] ?? []).length;
+  if (!count) return null;
+  const ym = ymOf(d);
+  try {
+    if (storage?.getItem(RECAP_KEY) === ym) return null;
+    storage?.setItem(RECAP_KEY, ym);
+  } catch {
+    return null;
+  }
+  return `${prev.getMonth() + 1}月はスタンプ${count}個たまりました。おつかれさま、今月もぼちぼちいこう🌸`;
 }
 
 // 日替わりのひとこと（豆知識・励まし・小ネタ。金額なし・煽りなし）

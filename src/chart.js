@@ -44,9 +44,10 @@ function fmtYen(yen) {
  * @param {{ targetAmount: number, retireAge: number, expectedReturn: number, events?: Array<{age: number, label?: string, amount: number}> }} params
  * @param {Chart|null|undefined} existingChart — previous Chart instance to destroy first
  * @param {{ label: string, series: { age: number, assets: number }[] }|null} [compare] — 保存プラン比較線
+ * @param {{ rate: number, series: { age: number, assets: number }[] }|null} [weak] — 弱気ケース（帯の下端）
  * @returns {Chart}
  */
-export function renderChart(canvas, mainSeries, params, existingChart, compare = null) {
+export function renderChart(canvas, mainSeries, params, existingChart, compare = null, weak = null) {
   if (existingChart) existingChart.destroy();
 
   const labels  = mainSeries.map((p) => p.age);
@@ -165,7 +166,24 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
           fill:        false,
           tension:     0,
         },
-        // 3. 保存プランの比較線（あるときだけ）
+        // 3. 弱気ケースの線＋本線との間の「不確実性の帯」（あるときだけ）
+        //    未来は1本の線ではなく幅で見せる。塗りは fill:0（本線との間）
+        ...(weak
+          ? [
+              {
+                label:           `弱気${weak.rate}%なら`,
+                data:            weak.series.map((p) => p.assets),
+                borderColor:     'rgba(107, 81, 74, 0.4)',
+                borderWidth:     1.5,
+                borderDash:      [6, 4],
+                pointRadius:     0,
+                fill:            0,
+                backgroundColor: 'rgba(150, 130, 120, 0.12)',
+                tension:         0.3,
+              },
+            ]
+          : []),
+        // 4. 保存プランの比較線（あるときだけ）
         ...(compareData
           ? [
               {

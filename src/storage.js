@@ -8,15 +8,17 @@ function deepFreeze(o) {
 }
 
 // 基本入力（常時表示・仕様§4.1）。円・歳・%。
+// 初期値は想定読者（20代後半・貯金これから）に寄せる。目標も「まず届く」1,000万円に
+// （遠すぎる初期目標は達成演出が夢物語になり、数字への信頼を下げるため）
 export const DEFAULT_INPUTS = deepFreeze({
-  currentAge: 35,
-  totalAsset: 5000000,
-  investedAsset: 5000000, // 既定は totalAsset と同額（現在の資産はすべて投資済みとみなす暫定値）
-  monthlyInvest: 50000,
-  annualIncome: 5000000,
-  annualExpense: 3000000,
+  currentAge: 28,
+  totalAsset: 1000000,
+  investedAsset: 250000,
+  monthlyInvest: 30000,
+  annualIncome: 3500000,
+  annualExpense: 2500000,
   expectedReturn: 5,
-  targetAmount: 100000000,
+  targetAmount: 10000000,
 });
 
 // 詳しく設定（アコーディオン・仕様§4.2）

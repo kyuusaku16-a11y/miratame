@@ -166,6 +166,8 @@
               <div id="scenarioList" class="scenario-list"></div>
               <p id="scenarioMsg" class="field-note" hidden aria-live="polite"></p>
             </div>
+            <!-- リピートの生命線: 結果を見た人に「来月また来る理由」を1行で渡す -->
+            <p class="record-hint">これは今日の見通し。来月、実際の数字を<a href="#track">きろく帳</a>につけると答え合わせができます</p>
           </div>
         </div>
 
@@ -185,6 +187,7 @@
 
         <label>現在の資産（万円）<input type="number" id="totalAsset" min="0" step="10" /></label>
         <label class="sub">うち投資に回している額（万円）<input type="number" id="investedAsset" min="0" step="10" /></label>
+        <p class="field-note" id="assetClampNote" hidden></p>
 
         <label>毎月の投資額（万円）<input type="number" id="monthlyInvest" min="0" step="0.5" /></label>
         <input type="range" id="monthlyInvestSlider" min="0" max="300000" step="5000" aria-label="毎月の投資額" />

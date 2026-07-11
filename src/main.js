@@ -3,7 +3,7 @@ import { buildComments } from './comments.js';
 import { loadState, saveState, normalizeState, addScenario, removeScenario, clearAllData, DEFAULT_ADVANCED } from './storage.js';
 import { renderChart } from './chart.js';
 import { fmtMoney, manToYen, yenToMan } from './format.js';
-import { deriveValidation } from './validation.js';
+import { deriveValidation, clampInvestedAsset } from './validation.js';
 import { buildReaction } from './reactions.js';
 import { buildSchedule } from './schedule.js';
 import { judgeType, buildShareText, renderShareCard, buildAxisDetails } from './share.js';
@@ -95,9 +95,28 @@ function readForm() {
     if (v === null) continue; // 空欄・入力途中は直前の値を維持
     (f.section === 'inputs' ? inputs : advanced)[f.id] = v;
   }
-  // 投資に回している額は総資産を超えない
-  if (inputs.investedAsset > inputs.totalAsset) inputs.investedAsset = inputs.totalAsset;
+  // 投資に回している額は総資産を超えない（超えたらUI側で入力欄の同期と注記を出す）
+  const clamp = clampInvestedAsset(inputs);
+  investWasClamped = clamp.clamped;
+  inputs.investedAsset = clamp.value;
   return { ...state, inputs, advanced };
+}
+
+// 直近の readForm で投資額のclampが起きたか（入力欄の同期・注記表示に使う）
+let investWasClamped = false;
+
+function syncInvestClampUi() {
+  const note = $('assetClampNote');
+  if (!investWasClamped) {
+    note.hidden = true;
+    return;
+  }
+  // 入力中の欄を書き換えると打ちにくいので、フォーカスが無いときだけ値を同期する
+  if (document.activeElement?.id !== 'investedAsset') {
+    $('investedAsset').value = yenToMan(state.inputs.investedAsset);
+  }
+  note.textContent = `現在の資産を超えていたため、投資分は${yenToMan(state.inputs.investedAsset)}万円（資産の全額）として計算しています`;
+  note.hidden = false;
 }
 
 function writeForm() {
@@ -128,7 +147,16 @@ function nearGoalText(months) {
   return m === 0 ? `あと${y}年ちょうど` : `あと${y}年${m}ヶ月`;
 }
 
-function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow = null, goalMonths = null, masked = false } = {}) {
+// 「1.9億〜4.3億円」のようなレンジ表記。ほぼ同じ値ならレンジにしない
+function moneyRange(weak, main) {
+  if (weak === null || weak === undefined) return fmtMoney(main);
+  const w = fmtMoney(weak);
+  const m = fmtMoney(main);
+  if (w === m) return m;
+  return `${w.replace(/円$/, '')}〜${m}`;
+}
+
+function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow = null, weakFinal = null, weakWindow = null, goalMonths = null, masked = false } = {}) {
   if (masked) {
     // 初回ベール中: 答えは「めくってのお楽しみ」
     for (const id of ['kpi-current', 'kpi-final', 'kpi-target']) $(id).textContent = '？';
@@ -144,7 +172,7 @@ function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow 
   if (near) {
     // ちかい目標モード: 目標に合わせた年数スケールのKPIに差し替え（資産寿命は出さない）
     $('kpi-final-label').textContent = `${windowYears}年後の資産`;
-    $('kpi-final').textContent = fmtMoney(assetsWindow ?? kpis.finalAssets);
+    $('kpi-final').textContent = moneyRange(weakWindow, assetsWindow ?? kpis.finalAssets);
     $('kpi-target-label').textContent = '毎月のつみたて';
     $('kpi-target').textContent = `${yenToMan(params.monthlyInvest)}万円`;
     $('kpi-lifetime-label').textContent = '目標まで';
@@ -156,7 +184,7 @@ function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow 
     return;
   }
   $('kpi-final-label').textContent = `${params.endAge}歳時点の資産`;
-  $('kpi-final').textContent = fmtMoney(kpis.finalAssets);
+  $('kpi-final').textContent = moneyRange(weakFinal, kpis.finalAssets);
   $('kpi-target-label').textContent = '目標到達まで';
   $('kpi-lifetime-label').textContent = '資産寿命';
   $('lifetimeBarLabel').textContent = '資産寿命';
@@ -697,6 +725,13 @@ function update({ withReaction = false, light = false } = {}) {
   const params = paramsOf(state);
   const mainSeries = projectAssets(params, params.expectedReturn / 100);
 
+  // 弱気ケース（設定利回り−2%・下限0%）。1本線の楽観に頼らず「帯」で見せる
+  const weakRate = Math.max(params.expectedReturn - 2, 0);
+  const weakSeries =
+    params.expectedReturn > 0 && weakRate < params.expectedReturn
+      ? projectAssets(params, weakRate / 100)
+      : null;
+
   const kpis = deriveKpis(mainSeries, params);
   const near = state.settings.viewMode === 'near';
   const goalMonths = near ? monthsToTarget(mainSeries, params.targetAmount) : null;
@@ -707,9 +742,12 @@ function update({ withReaction = false, light = false } = {}) {
       masked: veiled,
       windowYears,
       assetsWindow: mainSeries[windowYears]?.assets ?? null,
+      weakFinal: weakSeries ? weakSeries[weakSeries.length - 1].assets : null,
+      weakWindow: weakSeries ? (weakSeries[windowYears]?.assets ?? null) : null,
       goalMonths,
     });
     renderValidation(deriveValidation(params));
+    syncInvestClampUi();
     renderAdvancedSummary();
     if (!light) {
       const advice = buildAdvice(params, mainSeries, kpis);
@@ -744,7 +782,10 @@ function update({ withReaction = false, light = false } = {}) {
   }
   // ちかい目標モードはグラフを目標に合わせた年数（5〜10年）だけに
   const chartSeries = near ? mainSeries.slice(0, windowYears + 1) : mainSeries;
-  chart = renderChart($('chart'), chartSeries, params, chart, compare);
+  const weakChart = weakSeries
+    ? { rate: weakRate, series: near ? weakSeries.slice(0, windowYears + 1) : weakSeries }
+    : null;
+  chart = renderChart($('chart'), chartSeries, params, chart, compare, weakChart);
 }
 
 // 資産寿命の短い言い方（シナリオ比較用）

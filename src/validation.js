@@ -14,3 +14,10 @@ export function deriveValidation({ annualIncome, annualExpense, monthlyInvest })
     : null;
   return { surplus, investCapMonthly, overInvest, message, incomeNotice };
 }
+
+// 投資に回している額は総資産を超えられない。超えていたら総資産まで下げる。
+// clamped=true のとき、UI側は入力欄の同期と注記の表示を行う
+export function clampInvestedAsset({ totalAsset, investedAsset }) {
+  if (investedAsset > totalAsset) return { value: totalAsset, clamped: true };
+  return { value: investedAsset, clamped: false };
+}

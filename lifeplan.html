@@ -162,11 +162,16 @@
       /* ===== 印刷: 紙そのものになる ===== */
       @page { size: A4 portrait; margin: 0; }
       @media print {
-        body.lifeplan { background: #fff; }
+        /* bodyの100vh・padding（styles.cssのスマホバー用余白64px）・シート間マージンが残ると
+           文書全体が2ページ分を超えて白紙ページが生まれる */
+        html, body.lifeplan { background: #fff; min-height: 0; height: auto; padding: 0; margin: 0; }
         .lp-toolbar { display: none; }
+        .sheet + .sheet { margin-top: 0; }
         .sheet {
           width: 210mm;
-          min-height: 297mm;
+          /* 297mmぴったりに引き伸ばすと丸め誤差で次ページへあふれる（3〜4枚化の原因）。
+             290mmにして7mmの安全マージンを取る（メモ欄が余白を吸収して見た目は変わらない） */
+          min-height: 290mm;
           margin: 0;
           border-radius: 0;
           box-shadow: none;

@@ -27,6 +27,10 @@ export const UPDATES = [
 // noteの記事を公開したら {title, url} を足すと「よみもの」に並ぶ
 export const NOTE_ARTICLES = [
   {
+    title: 'ライフプラン表を、1枚だけ作ってみる — noteで書きました',
+    url: 'https://note.com/piyo_tame/n/n0a7edefcba07',
+  },
+  {
     title: '手取り20万円の分け方、noteでくわしく書きました',
     url: 'https://note.com/piyo_tame/n/nac02925a1a32',
   },

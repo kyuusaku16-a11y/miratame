@@ -294,6 +294,12 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 .defaults-note { display: block; margin: 10px auto 0; border: none; background: none; color: var(--color-muted); font-size: 12px; text-decoration: underline dotted; cursor: pointer; font-family: inherit; }
 .record-hint { margin: 12px 0 0; font-size: 12px; color: var(--color-muted); text-align: center; }
 .record-hint a { color: var(--color-primary-deep); }
+
+/* ミラためとは（ページ下部の自己紹介） */
+.about-mv { padding: 20px 24px; }
+.about-mv h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 17px; color: var(--color-ink); }
+.about-mv p { margin: 8px 0; font-size: 13px; line-height: 1.9; color: var(--color-ink); }
+.about-mv a { color: var(--color-primary-deep); }
 .defaults-note:hover { color: var(--color-primary-deep); }
 .defaults-note[hidden] { display: none; }
 

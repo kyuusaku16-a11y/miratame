@@ -1358,12 +1358,17 @@ async function openShareDialog() {
     const veil = $('chartVeil');
     const title = veil.querySelector('.veil-title');
     const original = title.innerHTML;
+    // お預けの間だけ、ぴよもびっくり顔に
+    const veilImg = veil.querySelector('img');
+    const originalImg = veilImg?.src;
+    if (veilImg) veilImg.src = 'assets/piyo-surprised.png';
     title.textContent = '診断は、数字を入れてからのお楽しみ🌰';
     veil.classList.add('veil-shake');
     veil.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
       veil.classList.remove('veil-shake');
       title.innerHTML = original;
+      if (veilImg && originalImg) veilImg.src = originalImg;
     }, 2600);
     return;
   }

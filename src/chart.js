@@ -21,6 +21,10 @@ const CHART_COLORS = {
 const JOY_IMG = new Image();
 JOY_IMG.src = 'assets/piyo-jump.png';
 
+// 資産が尽きる年のしょんぼりぴよ（目標達成のジャンプと対。正直だけど深刻にしすぎない）
+const SAD_IMG = new Image();
+SAD_IMG.src = 'assets/piyo-sad.png';
+
 /**
  * Format a yen value as 万 / 億 label (no trailing "円").
  * @param {number} yen
@@ -97,6 +101,24 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
     },
   };
 
+  // 資産が最初にゼロへ落ちる年に、しょんぼりぴよを置く（スマホの小さいグラフでは省略）
+  const zeroIdx = mainSeries.findIndex((p, i) => i > 0 && p.assets <= 0 && mainSeries[i - 1].assets > 0);
+  const depletionBadge = {
+    id: 'depletionBadge',
+    afterDatasetsDraw(chart) {
+      if (zeroIdx < 0) return;
+      if (chart.width < 520 || !SAD_IMG.complete || SAD_IMG.naturalWidth === 0) return;
+      const pt = chart.getDatasetMeta(0).data[zeroIdx];
+      if (!pt) return;
+      const { ctx, chartArea } = chart;
+      const x = Math.min(Math.max(pt.x, chartArea.left + 20), chartArea.right - 20);
+      const y = Math.max(pt.y - 36, chartArea.top + 2);
+      ctx.save();
+      ctx.drawImage(SAD_IMG, x - 16, y, 32, 32);
+      ctx.restore();
+    },
+  };
+
   return new Chart(canvas, {
     type: 'line',
     data: {
@@ -160,7 +182,7 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
           : []),
       ],
     },
-    plugins: [goalBadge],
+    plugins: [goalBadge, depletionBadge],
     options: {
       animation: { duration: 200 },
       responsive:  true,

@@ -87,6 +87,9 @@
       .lp-assump dt { font-size: 9.5px; color: #8d786f; }
       .lp-assump dd { margin: 1px 0 0; font-size: 13px; font-weight: 700; }
 
+      .lp-chart { margin: 0 0 12px; }
+      .lp-chart svg { display: block; width: 100%; height: auto; }
+
       .lp-sec-h { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 12px; color: var(--color-primary-deep, #b0616d); }
       .lp-sec-h::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--color-primary, #e8a0aa) 45%, transparent); }
 
@@ -125,8 +128,24 @@
           margin: 0;
           border-radius: 0;
           box-shadow: none;
-          padding: 14mm 14mm 10mm;
+          padding: 10mm 13mm 8mm;
         }
+        /* A4一枚に収めるための圧縮（グラフ込みでも1ページ） */
+        .lp-assump { gap: 4px 8px; margin: 8px 0 10px; }
+        .lp-assump div { padding: 4px 9px; }
+        .lp-assump dd { font-size: 12px; }
+        .lp-chart { margin-bottom: 8px; }
+        .lp-table { font-size: 10.5px; }
+        .lp-table td { padding: 2.5px 8px; }
+        .lp-summary { margin-top: 10px; padding: 7px 11px; }
+        .lp-summary p { font-size: 10.5px; line-height: 1.6; }
+        .sheet-head { padding-bottom: 8px; }
+        .sheet-foot { margin-top: 8px; padding-top: 6px; }
+        /* 行と注記が多いプランは、さらに一段詰める（それでもA4一枚に） */
+        .sheet.dense .lp-table { font-size: 10px; }
+        .sheet.dense .lp-table td { padding: 2px 8px; }
+        .sheet.dense .lp-chart { width: 86%; margin-inline: auto; }
+        .sheet.dense .lp-summary p { font-size: 10px; }
         .lp-empty { display: none; }
         .lp-table tr.milestone td, .lp-table tr.goal td, .lp-table tr.dry td,
         .lp-assump div, .lp-summary {
@@ -169,6 +188,9 @@
 
       <dl class="lp-assump" id="assumpList"></dl>
 
+      <h2 class="lp-sec-h">🌱 資産の見通し</h2>
+      <div class="lp-chart" id="chartZone" aria-hidden="false"></div>
+
       <h2 class="lp-sec-h">🌱 人生の年表</h2>
       <table class="lp-table" aria-label="年齢ごとの資産見込みとできごと">
         <thead>
@@ -194,7 +216,7 @@
     <script type="module">
       import { loadState } from './src/storage.js';
       import { projectAssets, deriveKpis } from './src/calc.js';
-      import { buildLifeplanRows } from './src/lifeplan.js';
+      import { buildLifeplanRows, buildLifeplanChartSvg } from './src/lifeplan.js';
       import { buildNarrativeReport } from './src/advice.js';
       import { fmtMoney } from './src/format.js';
 
@@ -234,6 +256,9 @@
             return box;
           })
         );
+
+        // 資産の見通しグラフ（数値のみから生成する自前SVG）
+        document.getElementById('chartZone').innerHTML = buildLifeplanChartSvg(series, params, kpis);
 
         // 年表
         const tbody = document.getElementById('rowsBody');
@@ -282,6 +307,10 @@
           el.textContent = p;
           box.appendChild(el);
         }
+
+        // 行と注記が多いプランは印刷時にさらに詰める（A4一枚を守る）
+        const noteLines = rows.reduce((n, r) => n + r.notes.length, 0);
+        if (rows.length + noteLines >= 22) document.getElementById('sheet').classList.add('dense');
 
         document.getElementById('sheet').hidden = false;
       }

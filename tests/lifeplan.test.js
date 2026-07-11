@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildLifeplanRows } from '../src/lifeplan.js';
+import { buildLifeplanRows, buildLifeplanChartSvg } from '../src/lifeplan.js';
 import { projectAssets, deriveKpis } from '../src/calc.js';
 
 const base = {
@@ -76,4 +76,35 @@ test('buildLifeplanRows: 教育費ピークの年が載る', () => {
   const withChild = { ...base, currentAge: 30, children: [{ age: 2, course: 'private-arts' }] };
   const { rows } = run(withChild);
   assert.ok(rows.some((r) => r.notes.join(' ').includes('教育費')));
+});
+
+// ---- 資産の見通しグラフ（印刷用SVG） ----
+
+test('buildLifeplanChartSvg: SVG文字列を返し、線と塗りがある', () => {
+  const { series, kpis } = run(base);
+  const svg = buildLifeplanChartSvg(series, base, kpis);
+  assert.ok(svg.startsWith('<svg'));
+  assert.ok(svg.includes('<path'));
+  assert.ok(!svg.includes('NaN'));
+});
+
+test('buildLifeplanChartSvg: 目標ラインが点線で入る', () => {
+  const { series, kpis } = run(base);
+  const svg = buildLifeplanChartSvg(series, base, kpis);
+  assert.ok(svg.includes('stroke-dasharray'));
+  assert.ok(svg.includes('目標'));
+});
+
+test('buildLifeplanChartSvg: 節目の点（退職・目標到達）が打たれる', () => {
+  const { series, kpis } = run(base);
+  const svg = buildLifeplanChartSvg(series, base, kpis);
+  assert.ok((svg.match(/<circle/g) ?? []).length >= 2);
+});
+
+test('buildLifeplanChartSvg: 尽きるプランには赤い点が入る', () => {
+  const tight = { ...base, annualExpense: 3400000, monthlyInvest: 0, targetAmount: 999999999999 };
+  const { series, kpis } = run(tight);
+  assert.equal(kpis.survivesToEnd, false);
+  const svg = buildLifeplanChartSvg(series, tight, kpis);
+  assert.ok(svg.includes('#d97975'));
 });

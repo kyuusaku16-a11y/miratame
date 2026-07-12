@@ -119,6 +119,7 @@ const APP_KEYS = [
   'money-vision-stamps',
   'money-vision-stamp-recap',
   'mv-hero-done',
+  'mv-visited',
   'mv-pwa-hint-done',
   'mv-revealed',
 ];

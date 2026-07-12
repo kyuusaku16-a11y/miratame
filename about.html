@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ミラためについて｜運営とたいせつにしていること</title>
+    <meta
+      name="description"
+      content="無料の資産寿命シミュレーター「ミラため」の運営について。なぜ作ったのか、たいせつにしている3つの約束、データの扱い、連絡先。"
+    />
+    <meta property="og:title" content="ミラためについて" />
+    <meta property="og:description" content="なぜ作ったのか、たいせつにしている3つの約束。" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:image" content="https://kyuusaku16-a11y.github.io/miratame/og-card.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://kyuusaku16-a11y.github.io/miratame/about.html" />
+    <link rel="icon" href="assets/sprout.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="guide">
+    <script>
+      // きせかえ（フォレスト）を選んだ人は、このページでも同じ配色に
+      try {
+        if (JSON.parse(localStorage.getItem('money-vision-state'))?.settings?.themeId === 'forest')
+          document.documentElement.dataset.theme = 'forest';
+      } catch {}
+    </script>
+
+    <header class="topbar">
+      <a class="tb-brand" href="./" aria-label="ミラため ホーム">
+        <img class="tb-logo" src="assets/logo-miratame.png" alt="ミラため" width="1000" height="428" />
+      </a>
+      <nav class="tb-nav" aria-label="メニュー">
+        <a href="./">ホーム</a>
+        <a href="columns/">よみもの</a>
+        <a href="types.html" class="nav-zukan">図鑑</a>
+        <a href="guide.html">使い方</a>
+      </nav>
+      <a class="tb-cta" href="./?diagnose=1"><span class="dg-full">性格診断</span><span class="dg-short">診断</span></a>
+    </header>
+
+    <main class="guide-main">
+      <article class="panel guide-body">
+        <h1 class="page-title">ミラためについて</h1>
+
+        <h2>なぜ作ったのか</h2>
+        <p>
+          お金の不安って、金額の問題というより「見えない」ことの問題だと思っています。
+          いくらあれば足りるのか、今のペースでいいのか、誰も教えてくれない。
+          調べようとすると、専門用語と「不安を煽って何かを売る話」ばかりが出てくる。
+        </p>
+        <p>
+          ミラためは、そこにひとつだけ答えを置くために作りました。
+          <strong>「いまのペースなら、お金は何歳まで持つのか」</strong>——
+          この1つの数字が見えるだけで、不安はずいぶんおとなしくなります。
+          怖がらせるためでも、何かを売るためでもなく、落ち着いて考える場所を作りたかった。それだけです。
+        </p>
+
+        <h2>たいせつにしている3つの約束</h2>
+        <p>
+          <strong>① 数字は端末の外に出しません。</strong>
+          入力した資産や収入は、あなたの端末のブラウザの中にだけ保存されます。
+          サーバーに送信されないので、運営者にも見えません。会員登録もありません。
+        </p>
+        <p>
+          <strong>② 断定しません。売りつけません。</strong>
+          ミラためは投資助言ではなく、特定の金融商品をおすすめしません。
+          未来は「弱気〜標準」の幅で描き、「絶対」「必ず」という言葉は使いません。
+        </p>
+        <p>
+          <strong>③ むずかしい言葉を使いません。</strong>
+          専門用語はできるだけ日常の言葉に直して、中学生が読んでもわかることを目指しています。
+          計算の仕組みも<a href="guide.html">ぜんぶ公開</a>しています。かくしごとはありません。
+        </p>
+
+        <h2>運営について</h2>
+        <p>
+          ミラためは、金融機関ではない、ふつうの会社員がひとりで運営しています。
+          事情があって名前は出していませんが、匿名だからこそ「①〜③の約束を守っているか」で
+          判断してもらえるように、仕組みと計算をすべて公開する方針にしています。
+          案内役のひよこ「ぴよため」は、公式マスコットです🐣
+        </p>
+
+        <h2>感想・要望はこちらへ</h2>
+        <p>
+          「ここがわかりにくい」「こんな機能がほしい」——ひとことでも、とても助かります。
+          X（旧Twitter）の<a href="https://x.com/AiYKIMdrmTKjiZI" target="_blank" rel="noopener">ぴよため</a>へのリプライやDM、
+          または<a href="https://note.com/piyo_tame" target="_blank" rel="noopener">note</a>のコメントで気軽にどうぞ。
+        </p>
+
+        <p class="guide-cta"><a href="./">🌱 シミュレーターをひらく（無料・登録不要）</a></p>
+        <p class="field-note">※ミラためは簡易シミュレーションです。投資助言ではなく、将来の成果を保証するものでもありません。</p>
+      </article>
+    </main>
+
+    <footer>
+      <p><a href="./">トップにもどる</a>／<a href="guide.html">使い方と計算の仕組み</a>／<a href="columns/">よみもの</a></p>
+    </footer>
+    <script data-goatcounter="https://money-vision.goatcounter.com/count" async src="vendor/count.js"></script>
+  </body>
+</html>

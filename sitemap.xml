@@ -70,4 +70,7 @@
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://kyuusaku16-a11y.github.io/miratame/about.html</loc>
+  </url>
 </urlset>

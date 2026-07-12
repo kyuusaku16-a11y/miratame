@@ -310,7 +310,8 @@
               </div>
               <p class="field-note">変わったところだけ直して、未来をもう一度見てみよう（数字は端末内のみ）</p>
             </div>
-            <div class="track-col">
+            <!-- スタンプは再訪者のごほうび。初回訪問では隠して、サイトの主役（シミュレーター）を立てる -->
+            <div class="track-col" id="stampCol" hidden>
               <div class="stamps-head">
                 <span class="stamps-title">まいにちのスタンプ</span>
                 <span class="stamps-count" id="stampCount"></span>
@@ -338,6 +339,17 @@
           <a id="lifeplanBtn" href="lifeplan.html"><svg class="ico" aria-hidden="true"><use href="#i-note"/></svg>ライフプラン表にする（印刷・PDF）</a>
           <span>年表と診断を、家族と話せるA4・2枚組に</span>
         </p>
+
+        <!-- 有料プランブックの需要調査（正直なフェイクドア: まだ無いことを隠さず、欲しい人の数だけ数える） -->
+        <div class="panel planbook-probe" id="planbookProbe">
+          <p class="pb-title">🌱 いま作っています: ミラためプランブック</p>
+          <p class="pb-text">
+            「今のまま」「積立をすこし増やしたら」「退職を1年変えたら」——
+            3つの未来をひとつの表で見比べて、家族と話せる有料のプラン集を準備中です。
+          </p>
+          <button id="planbookBtn" type="button">ほしいかも（匿名で1票だけ伝わります）</button>
+          <p class="field-note" id="planbookThanks" hidden>ありがとうございます！作る励みになります🌱 続報はXとnoteでお知らせします</p>
+        </div>
 
         <div class="panel reading" id="reading">
           <h2><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの・お知らせ</h2>
@@ -394,7 +406,8 @@
       <p>
         <a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a>／
         <a class="footer-link" href="types.html">ミラため性格診断 全16タイプ図鑑</a>／
-        <a class="footer-link" href="columns/">お金のよみもの一覧</a>
+        <a class="footer-link" href="columns/">お金のよみもの一覧</a>／
+        <a class="footer-link" href="about.html">ミラためについて</a>
       </p>
       <p class="theme-row">
         きせかえ:

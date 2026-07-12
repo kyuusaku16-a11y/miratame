@@ -982,6 +982,16 @@ function init() {
   $('modeNear').addEventListener('click', () => setViewMode('near'));
   syncModeButtons();
 
+  // スタンプは再訪者にだけ見せる（初見の人にはシミュレーターを主役に）。
+  // 再訪の判定: 前回訪問フラグ or 既にスタンプ/みなおしの記録がある
+  try {
+    const returning =
+      !!localStorage.getItem('mv-visited') || stampsThisMonth().length > 0 || loadHistory().length > 0;
+    localStorage.setItem('mv-visited', '1');
+    $('stampCol').hidden = !returning;
+  } catch {
+    $('stampCol').hidden = false; // localStorage不可なら出す（機能を奪わない側に倒す）
+  }
   renderStamps();
   // 月が変わって最初に開いたときだけ、先月のスタンプをねぎらう
   const recap = takeMonthlyRecap();
@@ -1018,6 +1028,12 @@ function init() {
   $('recordDoBtn').addEventListener('click', applyFutureCheck);
   $('recordCancelBtn').addEventListener('click', () => $('recordDialog').close());
   $('recordDoneBtn').addEventListener('click', () => $('recordDialog').close());
+  // プランブック需要調査: クリック数だけ匿名で数える（1端末1回）
+  $('planbookBtn').addEventListener('click', () => {
+    trackEvent('planbook-want');
+    $('planbookBtn').disabled = true;
+    $('planbookThanks').hidden = false;
+  });
   $('saveScenarioBtn').addEventListener('click', saveCurrentScenario);
   renderScenarios();
 
@@ -1528,6 +1544,10 @@ function blockWhileVeiled(message) {
   title.textContent = message;
   veil.classList.add('veil-shake');
   veil.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // 押した人が次にすべきこと＝入力開始。開始ボタンをひと呼吸だけ光らせて案内する
+  const jumpBtn = $('veilJumpBtn');
+  jumpBtn.classList.remove('pulse-once');
+  requestAnimationFrame(() => jumpBtn.classList.add('pulse-once'));
   setTimeout(() => {
     veil.classList.remove('veil-shake');
     title.innerHTML = original;

@@ -98,8 +98,10 @@ body {
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-primary) 22%, white);
 }
-.tb-name { display: flex; flex-direction: column; line-height: 1.2; }
+.tb-name { display: flex; flex-direction: column; line-height: 1.2; gap: 2px; }
 .tb-name strong { font-family: var(--font-display); font-size: 21px; color: var(--color-primary-deep); }
+/* ヘッダーはロゴの「文字だけ版」（枠なし）。フレーム付きはヒーロー専用 */
+.tb-name strong img { display: block; height: 21px; width: auto; }
 .tb-name small { font-size: 10.5px; color: var(--color-muted); }
 .tb-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 .tb-nav a,

@@ -65,7 +65,7 @@ html[data-theme="forest"] {
    ブラウザ標準のアンカリングと二重補正にならないよう無効化（Safariはもともと非対応） */
 html { overflow-anchor: none; }
 /* 固定トップバーの高さぶん、アンカー・スクロール移動の着地点を下げる */
-[id] { scroll-margin-top: 72px; }
+[id] { scroll-margin-top: 88px; }
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -80,29 +80,27 @@ body {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 10px 24px;
+  padding: 6px 24px;
   background: var(--topbar-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-line);
 }
 .topbar a,
-.topbar button,
-.tb-name strong { white-space: nowrap; }
-.tb-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-/* アイコンは顔+上半身のクロップ版（piyo-face.png）を丸窓で。全身版より顔が大きく見える */
-.tb-brand img {
-  width: 46px;
-  height: 46px;
-  object-fit: cover;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 22%, white);
+.topbar button { white-space: nowrap; }
+.tb-brand {
+  display: flex;
+  align-items: center;
+  flex: none;
+  text-decoration: none;
 }
-.tb-name { display: flex; flex-direction: column; line-height: 1.2; gap: 2px; }
-.tb-name strong { font-family: var(--font-display); font-size: 21px; color: var(--color-primary-deep); }
-/* ヘッダーはロゴの「文字だけ版」（枠なし）。フレーム付きはヒーロー専用 */
-.tb-name strong img { display: block; height: 21px; width: auto; }
-.tb-name small { font-size: 10.5px; color: var(--color-muted); }
+/* 完成ロゴをサイトの顔として表示。透過PNGの比率を崩さない */
+.tb-brand .tb-logo {
+  display: block;
+  width: 165px;
+  height: auto;
+  object-fit: contain;
+}
 .tb-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 .tb-nav a,
 .tb-nav button {
@@ -140,8 +138,7 @@ body {
 .tb-cta .dg-short { display: none; }
 @media (max-width: 700px) {
   .topbar { padding: 8px 10px; gap: 6px; }
-  .tb-name small { display: none; }
-  .tb-brand img { width: 40px; height: 40px; }
+  .tb-brand .tb-logo { width: 120px; }
   .tb-nav { gap: 0; }
   .tb-nav a,
   .tb-nav button { font-size: 12px; padding: 6px 6px; }
@@ -149,17 +146,17 @@ body {
   .tb-cta .dg-full { display: none; }
   .tb-cta .dg-short { display: inline; }
   .tb-cta { font-size: 12px; padding: 8px 12px; }
-  .tb-name strong { font-size: 18px; }
 }
 @media (max-width: 430px) {
   /* 図鑑は独自コンテンツの柱なので小さい画面でも消さない（パディングを詰めて収める） */
+  .tb-brand .tb-logo { width: 106px; }
   .tb-nav a,
   .tb-nav button { font-size: 11px; padding: 6px 4px; }
 }
 @media (max-width: 359px) {
-  /* さすがに収まらない極小画面では、診断ボタンを優先して図鑑とぴよ顔を畳む */
+  /* さすがに収まらない極小画面では、診断ボタンを優先して図鑑を畳む */
   .tb-nav .nav-zukan { display: none; }
-  .tb-brand img { display: none; }
+  .tb-brand .tb-logo { width: 96px; }
   .tb-cta { padding: 7px 9px; }
 }
 

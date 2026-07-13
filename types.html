@@ -21,6 +21,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* 図鑑はカードグリッドなので、本文ページの幅制限（720px）を広げる */
+      .guide-main { max-width: 940px; }
+    </style>
   </head>
   <body class="guide">
     <script>
@@ -48,9 +52,7 @@
       <article class="panel guide-body">
         <h1 class="page-title">ミラため性格診断 全16タイプ図鑑</h1>
         <p>
-          あなたの入力から<strong>「ため力」「そだて方」「そなえ」「しこみ」</strong>の4つの軸を読み取って、
-          16タイプの動物に当てはめます。質問はゼロ、答えは実際の家計だから正直。
-          タイプに優劣はなく、それぞれ違う習性と、しあわせに暮らすコツがあります。数字を変えるとタイプも変わります。
+          あなたの入力から<strong>「ため力」「そだて方」「そなえ」「しこみ」</strong>の4つの軸を読み取って、16タイプの動物に当てはめます。質問はゼロ、答えは実際の家計だから正直。タイプに優劣はなく、それぞれ違う習性と、しあわせに暮らすコツがあります。数字を変えるとタイプも変わります。
         </p>
         <div class="type-grid" id="typeGrid"></div>
         <p class="guide-cta"><a href="./?diagnose=1">🌰 自分のタイプを診断する（無料・30秒）</a></p>

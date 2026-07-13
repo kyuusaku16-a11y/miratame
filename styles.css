@@ -71,7 +71,12 @@ body {
   font-family: var(--font-body);
   background: var(--color-bg);
   color: var(--color-ink);
+  /* 文節単位の折り返し（Chrome系のみ。非対応ブラウザは従来どおり） */
+  word-break: auto-phrase;
 }
+/* 「う」「す。」だけの行や、単語の途中折れを減らす（非対応ブラウザは無視） */
+p, li, dd, figcaption { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
 /* ===== トップバー（スリム固定ヘッダー） ===== */
 .topbar {
   position: sticky;
@@ -1026,7 +1031,8 @@ header .tagline { font-size: 13px; }
 #scenarioMsg { flex-basis: 100%; text-align: center; margin: 2px 0 0; }
 
 /* 解説ページ（guide.html） */
-.guide-main { display: block; max-width: 940px; margin: 0 auto; padding: 8px 20px 40px; }
+/* 本文ページは1行約40字に収める（読みやすさ優先。図鑑はページ側で上書き） */
+.guide-main { display: block; max-width: 720px; margin: 0 auto; padding: 8px 20px 40px; }
 .guide-body { padding: 24px 26px; line-height: 1.9; }
 .guide-body h2 { font-family: var(--font-display); font-size: 19px; color: var(--color-ink); margin: 26px 0 8px; }
 .guide-body h2:first-of-type { margin-top: 6px; }

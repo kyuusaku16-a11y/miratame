@@ -162,15 +162,13 @@
       /* ===== 印刷: 紙そのものになる ===== */
       @page { size: A4 portrait; margin: 0; }
       @media print {
-        /* bodyの100vh・padding（styles.cssのスマホバー用余白64px）・シート間マージンが残ると
-           文書全体が2ページ分を超えて白紙ページが生まれる */
+        /* bodyの100vh・padding（styles.cssのスマホバー用余白64px）・シート間マージンが残ると文書全体が2ページ分を超えて白紙ページが生まれる */
         html, body.lifeplan { background: #fff; min-height: 0; height: auto; padding: 0; margin: 0; }
         .lp-toolbar { display: none; }
         .lp-empty { display: none; }
         .sheet + .sheet { margin-top: 0; }
         .sheet2 { break-before: page; page-break-before: always; margin-top: 0; }
-        /* 収まり戦略: iOSなどブラウザが独自の用紙余白を付けても1シート=1ページになるよう、
-           中身を約270mm以下に圧縮し、高さは固定しない（297mmぴったり指定は3〜4枚化の原因だった） */
+        /* 収まり戦略: iOSなどブラウザが独自の用紙余白を付けても1シート=1ページになるよう、中身を約270mm以下に圧縮し、高さは固定しない（297mmぴったり指定は3〜4枚化の原因だった） */
         .sheet {
           width: 210mm;
           min-height: 0;
@@ -274,8 +272,7 @@
 
       <footer class="sheet-foot">
         <p>
-          この表はミラため（無料シミュレーター）による概算で、将来の成果を保証するものではありません。利回り・物価・制度の変化で結果は変わります。
-          投資助言ではありません。／ 年に1回、数字を入れ直して作り直すのがおすすめです。<br />
+          この表はミラため（無料シミュレーター）による概算で、将来の成果を保証するものではありません。利回り・物価・制度の変化で結果は変わります。投資助言ではありません。／ 年に1回、数字を入れ直して作り直すのがおすすめです。<br />
           https://kyuusaku16-a11y.github.io/miratame/ ／ 1枚目
         </p>
         <img src="assets/piyo-watering.png" alt="" aria-hidden="true" />

@@ -180,7 +180,9 @@ main { display: flex; flex-direction: column; gap: 20px; padding: 20px 32px 40px
      吸い込まれて順序が崩れる（h1はvisually-hidden=絶対配置なので行を消費しない） */
   .diagnosis-hero { grid-column: 1 / -1; grid-row: 1; }
   section.results { grid-column: 2; grid-row: 2; }
-  .panel.form { grid-column: 1; grid-row: 2 / span 2; }
+  /* グリッドに置くのはラッパー（.form-col）。stickyの可動範囲がこの箱の高さ
+     （＝コックピット＋見通し欄のぶん）に閉じ、下の全幅セクションへ付いてこない */
+  .form-col { grid-column: 1; grid-row: 2 / span 2; align-self: stretch; }
   .results-mid { grid-column: 2; grid-row: 3; }
   .results-more { grid-column: 1 / -1; grid-row: 4; }
   .about-mv { grid-column: 1 / -1; grid-row: 5; }
@@ -356,7 +358,8 @@ summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color
 }
 .zone-label::after { content: ''; flex: 1; height: 1px; background: var(--color-line); }
 
-/* 2カラムのPCでは入力フォームを固定サイドバーに（ダッシュボードの操作盤） */
+/* 2カラムのPCでは入力フォームを固定サイドバーに（ダッシュボードの操作盤）。
+   可動範囲は親の .form-col 内に限られる */
 @media (min-width: 1200px) {
   .panel.form { position: sticky; top: 72px; max-height: calc(100vh - 92px); overflow-y: auto; }
 }

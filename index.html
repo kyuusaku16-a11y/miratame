@@ -198,6 +198,8 @@
 
       <!-- 操作盤と見通しの2カラム。stickyフォームの可動範囲はこのラッパー内に閉じる -->
       <div class="dash">
+      <!-- stickyフォームの可動範囲を閉じ込める実体ボックス（display:contentsの.dashは範囲にならない） -->
+      <div class="form-col">
       <section class="panel form">
         <h2>あなたの数字</h2>
 
@@ -281,6 +283,7 @@
           <p id="backupMsg" class="field-note" hidden aria-live="polite"></p>
         </details>
       </section>
+      </div>
 
       <!-- グラフより下・PCでは右カラムに続く（スマホでは入力フォームの後ろ） -->
       <section class="results-mid">

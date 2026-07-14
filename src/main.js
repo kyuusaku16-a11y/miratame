@@ -994,15 +994,20 @@ function init() {
     e.target.value = ''; // 同じファイルの再選択でも change を発火させる
   });
 
-  // スマホの資産寿命バー: KPIカードもグラフも見えていない時だけ出す
+  // スマホの資産寿命ドック: KPIカードもグラフも見えていない時だけ出す
   $('lifetimeBar').addEventListener('click', () => {
     document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  // 「数字を変える」の利用数は、下から開く入力シートを作るかどうかの判断材料（計測ドリブン）
+  $('lifetimeEditBtn').addEventListener('click', () => {
+    trackEvent('bar-edit');
+    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
   const visible = new Map();
   const barObserver = new IntersectionObserver(
     (entries) => {
       for (const e of entries) visible.set(e.target, e.isIntersecting);
-      $('lifetimeBar').hidden = [...visible.values()].some(Boolean);
+      $('lifetimeDock').hidden = [...visible.values()].some(Boolean);
     },
     { threshold: 0.15 },
   );

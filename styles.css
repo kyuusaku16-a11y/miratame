@@ -1223,15 +1223,24 @@ footer .footer-link { color: var(--color-primary-deep); }
 .pwa-hint[hidden] { display: none; }
 .pwa-hint button { margin-left: auto; border: none; background: none; color: inherit; font-size: 16px; cursor: pointer; padding: 0 4px; }
 
-/* スマホ用の資産寿命固定バー（PCは非表示。KPIカードかグラフが見えている間も隠す） */
-.lifetime-bar { display: none; }
+/* スマホ用の資産寿命固定ドック（PCは非表示。KPIカードかグラフが見えている間も隠す）
+   左: 資産寿命の答え（タップでグラフへ） 右: 数字を変える（タップで入力欄へ） */
+.lifetime-dock { display: none; }
 @media (max-width: 940px) {
-  .lifetime-bar {
+  .lifetime-dock {
     position: fixed;
     left: 16px;
     right: 16px;
     bottom: 12px;
     z-index: 50;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .lifetime-dock[hidden] { display: none; }
+  .lifetime-bar {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1244,12 +1253,27 @@ footer .footer-link { color: var(--color-primary-deep); }
     cursor: pointer;
     font-family: inherit;
   }
-  .lifetime-bar[hidden] { display: none; }
   .lifetime-bar img { width: 34px; height: 34px; object-fit: contain; }
   .lifetime-bar .lb-label { font-size: 12px; color: var(--color-muted); }
   .lifetime-bar .lb-value { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--color-primary-deep); }
   .lifetime-bar .lb-value.warn { color: var(--color-warn); }
-  body { padding-bottom: 64px; } /* バーが最下部の文章を隠さないように */
+  .lifetime-edit {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    background: var(--color-primary-deep);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 6px 20px rgba(70, 55, 40, 0.18);
+    cursor: pointer;
+  }
+  body { padding-bottom: 64px; } /* ドックが最下部の文章を隠さないように */
 }
 
 /* 診断ボタン（ヘッダーの題名横が定位置） */

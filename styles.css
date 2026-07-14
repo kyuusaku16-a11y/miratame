@@ -106,6 +106,20 @@ h1, h2, h3 { text-wrap: balance; }
   height: auto;
   object-fit: contain;
 }
+/* ロゴ横のカテゴリー補足（何のサイトかの一言。売り文句は入れない） */
+.tb-tagline {
+  flex: none;
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  border-left: 1px solid var(--color-line);
+  padding-left: 14px;
+  margin-left: -4px;
+}
+/* 860px未満はナビ＋診断ボタンと収まらず右端がはみ出すため畳む（実測830pxで衝突） */
+@media (max-width: 859px) {
+  .tb-tagline { display: none; }
+}
 .tb-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 .tb-nav a,
 .tb-nav button {

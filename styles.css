@@ -1243,24 +1243,40 @@ footer .footer-link { color: var(--color-primary-deep); }
     min-width: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     background: var(--color-panel);
     border: 1px solid var(--color-line);
     border-radius: 999px;
-    padding: 8px 16px;
+    padding: 6px 14px;
     box-shadow: 0 6px 20px rgba(70, 55, 40, 0.18);
     cursor: pointer;
     font-family: inherit;
+    text-align: left;
   }
-  .lifetime-bar img { width: 34px; height: 34px; object-fit: contain; }
-  .lifetime-bar .lb-label { font-size: 12px; color: var(--color-muted); }
-  .lifetime-bar .lb-value { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--color-primary-deep); }
+  .lifetime-bar img { flex: none; width: 34px; height: 34px; object-fit: contain; }
+  /* ラベル上・値下の2段。値は1行固定であふれたら…（狭い画面で途中折り返しさせない） */
+  .lifetime-bar .lb-text { display: flex; flex-direction: column; min-width: 0; }
+  .lifetime-bar .lb-top { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden; max-width: 100%; }
+  .lifetime-bar .lb-label { font-size: 11px; color: var(--color-muted); }
+  .lifetime-bar .lb-hint { font-size: 10px; color: var(--color-primary-deep); }
+  .lifetime-bar .lb-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--color-primary-deep);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
   .lifetime-bar .lb-value.warn { color: var(--color-warn); }
   .lifetime-edit {
     flex: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    white-space: nowrap;
     gap: 6px;
     border: none;
     border-radius: 999px;
@@ -1274,6 +1290,10 @@ footer .footer-link { color: var(--color-primary-deep); }
     cursor: pointer;
   }
   body { padding-bottom: 64px; } /* ドックが最下部の文章を隠さないように */
+}
+/* 極小画面はヒントを畳んで値を優先（食い込み防止） */
+@media (max-width: 359px) {
+  .lifetime-bar .lb-hint { display: none; }
 }
 
 /* 診断ボタン（ヘッダーの題名横が定位置） */

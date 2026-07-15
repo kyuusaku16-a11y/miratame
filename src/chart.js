@@ -127,7 +127,7 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       datasets: [
         // 1. Main line — thick, segment-colored green (gain) / red (loss)
         {
-          label:                `現在のプラン（利回り${params.expectedReturn}%）`,
+          label:                '今のプラン',
           data:                 mainData,
           borderWidth:          3.5,
           // 線の下をふんわり塗って「資産の山」に見せる（ベリー色→透明）
@@ -171,7 +171,7 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
         ...(weak
           ? [
               {
-                label:           `弱気${weak.rate}%なら`,
+                label:           `低めの想定 ${weak.rate}%`,
                 data:            weak.series.map((p) => p.assets),
                 borderColor:     'rgba(107, 81, 74, 0.4)',
                 borderWidth:     1.5,
@@ -189,9 +189,9 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
               {
                 label:       compare.label,
                 data:        compareData,
-                borderColor: '#b08bbb',
+                borderColor: 'rgba(116, 91, 132, 0.72)',
                 borderWidth: 2,
-                borderDash:  [4, 4],
+                borderDash:  [8, 5],
                 pointRadius: 0,
                 fill:        false,
                 tension:     0.3,

@@ -234,7 +234,7 @@ export function buildNarrativeReport(params, series, kpis, adviceItems = [], see
   const stress = buildStressSection(params, kpis);
   if (stress) sections.push(stress);
 
-  return { type: 'diagnosis', title: '今回の診断', lines, sections };
+  return { type: 'diagnosis', title: '今回の見通し', lines, sections };
 }
 
 // params: paramsOf(state) 相当 / series: メイン系列 / kpis: deriveKpis の結果

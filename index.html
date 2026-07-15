@@ -50,11 +50,11 @@
       </a>
       <nav class="tb-nav" aria-label="メニュー">
         <button id="jumpFormBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>入力</button>
+        <a href="#outlook"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>見通し</a>
         <a href="#track"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>みなおし</a>
         <a href="#reading"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの</a>
-        <a href="types.html" class="nav-zukan"><svg class="ico" aria-hidden="true"><use href="#i-tree"/></svg>図鑑</a>
       </nav>
-      <button id="shareBtn" class="tb-cta" type="button"><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg><span class="dg-full">性格診断</span><span class="dg-short">診断</span></button>
+      <button id="shareBtn" class="tb-cta" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg><span class="dg-full">タイプ診断</span><span class="dg-short">タイプ</span></button>
     </header>
 
     <main>
@@ -104,7 +104,7 @@
         </dialog>
 
         <dialog id="shareDialog" class="share-dialog">
-          <img id="shareCardImg" alt="ミラため性格診断の結果カード" />
+          <img id="shareCardImg" alt="お金のタイプ診断の結果カード" />
           <div class="share-pal" role="group" aria-label="カードの色">
             <span>カードの色</span>
             <button id="palBerry" type="button"><span class="swatch berry" aria-hidden="true"></span>ベリー</button>
@@ -151,15 +151,11 @@
             <p class="veil-worries-note">ひとつでも気になったら、ミラためで確認できます</p>
             <div class="veil-trust" aria-hidden="false"><span>登録不要</span><span>データは端末内のみ</span><span>無料</span></div>
             <button id="veilJumpBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>今のペースを確かめる</button>
-            <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>結果を見る</button>
-            <button id="veilSampleBtn" type="button" class="veil-sample">数字を入れずにサンプルを見る</button>
+            <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>今のペースを確かめる</button>
+            <button id="veilSampleBtn" type="button" class="veil-sample">サンプル結果を見る</button>
           </div>
+          <h2 class="outlook-title" id="outlook">今回の見通し</h2>
           <div class="cockpit-side">
-            <!-- 問いから入る（みらい電卓方式）: モード切替＝知りたいことの選択 -->
-            <div class="view-toggle" role="group" aria-label="知りたいことを選ぶ">
-              <button id="modeLife" type="button">何歳まで安心？</button>
-              <button id="modeNear" type="button">目標にいつ届く？</button>
-            </div>
             <div class="answer-hero">
               <span class="answer-icon" aria-hidden="true"><img src="assets/piyo-good.png" alt="" /></span>
               <div class="answer-text">
@@ -167,17 +163,69 @@
                 <span class="answer-value kpi-value" id="kpi-lifetime">-</span>
               </div>
             </div>
+            <p class="outlook-basis">今の入力条件をそのまま続けた場合の試算です</p>
             <div class="kpis">
-              <div class="kpi"><span class="kpi-icon icon-green" aria-hidden="true"><img src="assets/coins.png" alt="" /></span><span class="kpi-label">現在の資産</span><span class="kpi-value" id="kpi-current">-</span></div>
               <div class="kpi"><span class="kpi-icon icon-blue" aria-hidden="true"><img src="assets/sprout.png" alt="" /></span><span class="kpi-label" id="kpi-final-label">100歳時点の資産</span><span class="kpi-value" id="kpi-final">-</span></div>
-              <div class="kpi"><span class="kpi-icon icon-orange" aria-hidden="true"><svg class="ico"><use href="#i-target"/></svg></span><span class="kpi-label" id="kpi-target-label">目標到達まで</span><span class="kpi-value" id="kpi-target">-</span></div>
             </div>
+            <p class="outlook-summary" id="outlookSummary"></p>
+          </div>
+          <!-- 助言ではなく、保存せずに別条件を比較する操作 -->
+          <div class="next-steps" id="nextSteps" hidden>
+            <p class="ns-title">あなたの次の一歩</p>
+            <p class="ns-sub">保存せずに、条件を少し変えた未来を試せます。</p>
+            <p class="ns-comfort" id="nextStepsComfort" hidden>今のプランには、少し余裕がありそうです。<br />余裕の使い方を試してみませんか？</p>
+            <p class="ns-safety">お試しでは、入力値や保存データは変わりません。</p>
+            <div class="ns-buttons" id="nsButtons"></div>
+            <p class="trial-notice" id="trialNotice" hidden aria-live="polite"></p>
+            <p class="ns-planbook" id="nsPlanbook" hidden><button type="button" id="nsPlanbookLink" class="linklike">3つの未来を、家族とゆっくり見比べたい方へ</button></p>
           </div>
           <div class="cockpit-main">
+            <section class="trial-comparison" id="trialComparison" hidden aria-live="polite" aria-atomic="true">
+              <p class="trial-condition" id="trialCondition"></p>
+              <p class="trial-status">お試し中です。入力値や保存データは変わりません。</p>
+              <p class="trial-toggle-note">同じボタンをもう一度押すと解除できます。</p>
+              <div class="trial-plans">
+                <div class="trial-plan">
+                  <strong>今のプラン</strong>
+                  <span id="trialCurrentLife"></span>
+                  <span id="trialCurrentFinal"></span>
+                </div>
+                <div class="trial-plan trial-plan-new">
+                  <strong>お試しプラン</strong>
+                  <span id="trialNewLife"></span>
+                  <span id="trialNewFinal"></span>
+                </div>
+              </div>
+              <div class="trial-differences">
+                <div><span>資産寿命の変化</span><strong id="trialLifeDelta"></strong></div>
+                <div><span id="trialFinalDeltaLabel">100歳時点の資産の変化</span><strong id="trialFinalDelta"></strong></div>
+              </div>
+              <p class="trial-outcome" id="trialOutcome"></p>
+              <div class="trial-actions">
+                <button id="trialCancelBtn" type="button" class="trial-cancel">お試しをやめる</button>
+                <button id="trialAddMonthlyBtn" type="button">この内容を、今月の一歩にする</button>
+              </div>
+              <div id="trialMonthlyMessage" class="trial-monthly-message" hidden>
+                <strong>今月の一歩に追加しました。</strong>
+                <span>次の月のみなおしで、できたか振り返れます。</span>
+              </div>
+            </section>
+            <!-- グラフの表示切替と、その読み取りに使う補助指標。詳細欄ではなくグラフの直前に置く -->
+            <div class="chart-view-tools">
+              <div class="view-toggle" role="group" aria-label="知りたいことを選ぶ">
+                <button id="modeLife" type="button">何歳まで安心？</button>
+                <button id="modeNear" type="button">目標にいつ届く？</button>
+              </div>
+              <div class="panel detail-kpis" aria-label="補足の指標">
+                <div class="kpi"><span class="kpi-icon icon-green" aria-hidden="true"><img src="assets/coins.png" alt="" /></span><span class="kpi-label">現在の資産</span><span class="kpi-value" id="kpi-current">-</span></div>
+                <div class="kpi"><span class="kpi-icon icon-orange" aria-hidden="true"><svg class="ico"><use href="#i-target"/></svg></span><span class="kpi-label" id="kpi-target-label">目標到達まで</span><span class="kpi-value" id="kpi-target">-</span></div>
+              </div>
+            </div>
+            <h3 class="chart-title">資産推移グラフ</h3>
             <div class="chart-box"><canvas id="chart"></canvas></div>
             <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は仮の値（年180万円）で計算中（タップで変更）</button>
             <div class="scenario-row">
-              <button id="saveScenarioBtn" type="button" class="scenario-save"><svg class="ico" aria-hidden="true"><use href="#i-bookmark"/></svg>いまのプランを保存してくらべる</button>
+              <button id="saveScenarioBtn" type="button" class="scenario-save"><svg class="ico" aria-hidden="true"><use href="#i-bookmark"/></svg>このプランを保存</button>
               <div id="scenarioList" class="scenario-list"></div>
               <p id="scenarioMsg" class="field-note" hidden aria-live="polite"></p>
             </div>
@@ -189,19 +237,65 @@
         <p class="trust-note">登録不要・入力データは端末内のみ・投資助言ではありません</p>
 
         <div id="reaction" class="reaction" hidden aria-live="polite"><img class="reaction-img" id="reactionImg" src="assets/bird-pink.png" alt="" aria-hidden="true" loading="lazy" /><span id="reactionText"></span></div>
-        <div class="summary-comment" id="summaryComment"></div>
 
       </section>
 
       <!-- 入力前に「分かった後にできること」を見せる: 結果の先に比較があると伝えて入力の腰を上げてもらう -->
-      <section class="panel next-preview" aria-labelledby="nextPreviewTitle">
+      <section class="panel next-preview" id="nextPreview" aria-labelledby="nextPreviewTitle">
         <h2 id="nextPreviewTitle">見るだけで終わりません</h2>
-        <ul class="next-preview-list">
-          <li>積立を月1万円増やしたら？</li>
-          <li>生活費を月1万円見直したら？</li>
-          <li>退職を1年延ばしたら？</li>
-        </ul>
-        <p class="next-preview-note">条件を変えて、未来の違いをくらべられます</p>
+        <p class="next-preview-lede">条件を少し変えたとき、未来がどれくらい変わるか比較できます。</p>
+        <div class="next-preview-example" aria-label="比較の表示例">
+          <span>今のまま<strong>資産寿命：約74歳</strong></span>
+          <span>生活費を月1万円見直した場合<strong>資産寿命：約80歳</strong></span>
+          <strong class="next-preview-delta">＋6年</strong>
+        </div>
+        <p class="next-preview-note">入力後は、あなた自身の数字で比較できます。</p>
+        <p class="next-preview-caption">表示例です。実際の結果は入力内容によって変わります。</p>
+      </section>
+
+      <!-- 結果を確認したあとの再訪導線と、独立したタイプ診断 -->
+      <section class="results-actions" id="resultsActions">
+        <h2 class="zone-label">今月の一歩</h2>
+        <div class="panel track" id="track">
+          <div class="track-body">
+            <div class="track-col track-monthly">
+              <div class="stamps-head"><span class="stamps-title">今月、変わったことある？</span></div>
+              <p class="track-status" id="trackStatus"></p>
+              <div class="monthly-actions" id="monthlyActions" hidden>
+                <strong>今月の一歩</strong>
+                <ul id="monthlyActionList"></ul>
+              </div>
+              <div class="fc-chips">
+                <button type="button" class="fc-chip" data-field="totalAsset">資産</button>
+                <button type="button" class="fc-chip" data-field="annualIncome">収入</button>
+                <button type="button" class="fc-chip" data-field="annualExpense">生活費</button>
+                <button type="button" class="fc-chip" data-field="monthlyInvest">積立額</button>
+                <button type="button" class="fc-chip fc-same" id="fcSameBtn">特に変わっていない</button>
+              </div>
+              <p class="field-note">変わったところだけ直して、未来をもう一度見てみよう（数字は端末内のみ）</p>
+            </div>
+            <div class="track-col" id="stampCol" hidden>
+              <div class="stamps-head"><span class="stamps-title">まいにちのスタンプ</span><span class="stamps-count" id="stampCount"></span></div>
+              <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
+              <button id="stampBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>今日のスタンプを押す</button>
+              <p class="stamp-quote" id="stampQuote" hidden></p>
+            </div>
+          </div>
+          <p class="field-note pwa-hint" id="pwaHint" hidden>
+            このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
+            <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>
+          </p>
+        </div>
+
+        <h2 class="zone-label">お金のタイプ診断</h2>
+        <div class="diagnosis-hero" id="diagnosisHero" hidden>
+          <img class="dh-img" src="assets/piyo-notice.png" alt="" aria-hidden="true" />
+          <div class="dh-text">
+            <strong>30秒でわかる「お金のタイプ診断」</strong>
+            <span>あなたは16タイプのどれ？ いま入れた数字からわかります</span>
+          </div>
+          <button id="heroDiagnoseBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg>タイプを見てみる</button>
+        </div>
       </section>
 
       <!-- 操作盤と見通しの2カラム。stickyフォームの可動範囲はこのラッパー内に閉じる -->
@@ -246,7 +340,8 @@
           <summary>詳しく設定<span id="advancedSummary" class="summary-note"></span></summary>
           <h3>運用のこと</h3>
           <label data-unit="％">想定利回り（％）<input type="text" inputmode="decimal" id="expectedReturn" /></label>
-          <p class="field-note">目安：弱気2%・ふつう5%・強気8%（インフレ分を引いたあとの利回り）</p>
+          <p class="field-note">低めの想定 2%・中間の想定 5%・高めの想定 8%（インフレ分を引いたあとの利回り）</p>
+          <p class="field-note">将来の運用成果を保証するものではありません。<br />税金・手数料・価格変動などを簡略化した試算です。</p>
           <h3>老後のこと</h3>
           <label data-unit="歳">退職年齢・積立終了（歳）<input type="text" inputmode="numeric" id="retireAge" /></label>
           <input type="range" id="retireAgeSlider" min="50" max="75" step="1" aria-label="退職年齢" />
@@ -302,6 +397,7 @@
             <div id="scheduleList"></div>
           </div>
           <div class="panel comments" id="comments"></div>
+          <div class="summary-comment" id="summaryComment"></div>
         </div>
 
         <!-- きょうのよみもの: 日替わりでコラムを1本だけ（一覧はページ下部とcolumns/へ） -->
@@ -311,72 +407,21 @@
           <span class="dr-desc" id="dailyReadingDesc"></span>
         </a>
 
-        <h2 class="zone-label">今月のみなおしとスタンプ</h2>
-        <div class="panel track" id="track">
-          <div class="track-body">
-            <div class="track-col track-monthly">
-              <div class="stamps-head">
-                <span class="stamps-title">今月、変わったことある？</span>
-              </div>
-              <p class="track-status" id="trackStatus"></p>
-              <div class="fc-chips">
-                <button type="button" class="fc-chip" data-field="totalAsset">資産</button>
-                <button type="button" class="fc-chip" data-field="annualIncome">収入</button>
-                <button type="button" class="fc-chip" data-field="annualExpense">生活費</button>
-                <button type="button" class="fc-chip" data-field="monthlyInvest">積立額</button>
-                <button type="button" class="fc-chip fc-same" id="fcSameBtn">特に変わっていない</button>
-              </div>
-              <p class="field-note">変わったところだけ直して、未来をもう一度見てみよう（数字は端末内のみ）</p>
-            </div>
-            <!-- スタンプは再訪者のごほうび。初回訪問では隠して、サイトの主役（シミュレーター）を立てる -->
-            <div class="track-col" id="stampCol" hidden>
-              <div class="stamps-head">
-                <span class="stamps-title">まいにちのスタンプ</span>
-                <span class="stamps-count" id="stampCount"></span>
-              </div>
-              <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
-              <button id="stampBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>今日のスタンプを押す</button>
-              <p class="stamp-quote" id="stampQuote" hidden></p>
-            </div>
-          </div>
-          <p class="field-note pwa-hint" id="pwaHint" hidden>
-            このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
-            <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>
-          </p>
-        </div>
-
       </section>
 
       </div>
 
-      <!-- 診断とよみものはPCでも全幅 -->
+      <!-- 詳細な条件と補足説明はPCでも全幅 -->
       <section class="results-more">
-        <h2 class="zone-label">くわしい診断とよみもの</h2>
-        <!-- 診断への入口バナー。主役（資産寿命）を語り終えたあとのお楽しみとして、ここに置く -->
-        <div class="diagnosis-hero" id="diagnosisHero" hidden>
-          <img class="dh-img" src="assets/piyo-notice.png" alt="" aria-hidden="true" />
-          <div class="dh-text">
-            <strong>30秒でわかる「ミラため性格診断」</strong>
-            <span>あなたは16タイプのどれ？ いま入れた数字からわかるよ</span>
-          </div>
-          <button id="heroDiagnoseBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg>診断してみる</button>
-        </div>
+        <h2 class="zone-label">詳細な条件と補足説明</h2>
         <div class="diagnosis-area" id="diagnosis"></div>
-        <!-- あなたの次の一歩: 入力値に応じた「別の未来を見る」ボタン。助言ではなく比較の操作 -->
-        <div class="panel next-steps" id="nextSteps" hidden>
-          <p class="ns-title">あなたの次の一歩</p>
-          <p class="ns-sub">気になる条件をタップすると、グラフにくらべる線が出ます（もう一度タップで解除）</p>
-          <div class="ns-buttons" id="nsButtons"></div>
-          <p class="field-note" id="nextStepMsg" hidden aria-live="polite"></p>
-          <p class="ns-planbook"><button type="button" id="nsPlanbookLink" class="linklike">3つの未来をまとめて紙で見たい方へ ›</button></p>
-        </div>
         <p class="lifeplan-link">
           <a id="lifeplanBtn" href="lifeplan.html"><svg class="ico" aria-hidden="true"><use href="#i-note"/></svg>ライフプラン表にする（印刷・PDF）</a>
           <span>年表と診断を、家族と話せるA4・2枚組に</span>
         </p>
 
         <!-- 有料プランブックの需要調査（正直なフェイクドア: まだ無いことを隠さず、欲しい人の数だけ数える） -->
-        <div class="panel planbook-probe" id="planbookProbe">
+        <div class="panel planbook-probe" id="planbookProbe" hidden>
           <p class="pb-title">🌱 企画を検討しています: ミラためプランブック</p>
           <p class="pb-text">
             「今のまま」「積立をすこし増やしたら」「退職を1年変えたら」——
@@ -390,9 +435,9 @@
           <h2><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの・お知らせ</h2>
           <!-- 上位3本は中心ユーザー（資産形成中）向け。初心者向けはその下と columns/ に残す -->
           <ul class="reading-list" id="readingList">
-            <li><a href="columns/shisan-jumyo.html">「資産寿命」ってなに？ 貯蓄額より大事な数字の話</a></li>
+            <li><a href="columns/nisa.html">NISAって結局なに？ 5分でわかる制度のきほん</a></li>
             <li><a href="columns/kyoiku-hi.html">教育費、こわがりすぎなくていい話</a></li>
-            <li><a href="columns/nenkin.html">年金、実際いくらもらえるの？ 不安を数字に変える話</a></li>
+            <li><a href="columns/shisan-jumyo.html">「資産寿命」ってなに？ 貯蓄額より大事な数字の話</a></li>
             <li><a href="columns/hajimete-100man.html">はじめての100万円の作り方 — 貯金ゼロからの現実的な道のり</a></li>
             <li><a href="columns/tedori-tsukaikata.html">手取り20万円、どう分ける？ 世界一シンプルな家計のルール</a></li>
             <li><a href="columns/setsuyaku.html">節約が続かないのは、意志が弱いからじゃない</a></li>
@@ -406,10 +451,10 @@
       <section class="panel about-mv" aria-labelledby="aboutTitle">
         <h2 id="aboutTitle">ミラためとは</h2>
         <p>
-          ミラためは、<strong>資産寿命</strong>——いまのペースでお金が何歳まで持つか——が30秒でわかる、無料の家計シミュレーターです。年齢・資産・収入・支出を入れるだけで、将来の資産の推移が弱気〜標準の幅つきグラフになります。登録は不要、入力したデータはこの端末の外に出ません。
+          ミラためは、<strong>資産寿命</strong>——いまのペースでお金が何歳まで持つか——が30秒でわかる、無料の家計シミュレーターです。年齢・資産・収入・支出を入れるだけで、将来の資産の推移が低め〜中間の想定幅つきグラフになります。登録は不要、入力したデータはこの端末の外に出ません。
         </p>
         <p>
-          数字を入れたら、16種類の動物でわかる<a href="?diagnose=1">お金の性格診断</a>と<a href="types.html">タイプ図鑑</a>もどうぞ。月に一度、変わったことを教えると「計画どおりか」の答え合わせができます。計算の仕組みはぜんぶ<a href="guide.html">使い方ページ</a>で公開しています。
+          数字を入れたら、16種類の動物でわかる<a href="?diagnose=1">お金のタイプ診断</a>と<a href="types.html">タイプ図鑑</a>もどうぞ。月に一度、変わったことを教えると「計画どおりか」の答え合わせができます。計算の仕組みはぜんぶ<a href="guide.html">使い方ページ</a>で公開しています。
         </p>
         <p class="field-note">案内役は、ふたばのひよこ「ぴよため」。あなたのお金が育つのを、いつも横で見守っています🌱</p>
       </section>
@@ -443,7 +488,7 @@
         <p>サイト改善のため、診断結果のタイプ分布と、ボタンが使われた回数だけを匿名で集計しています。入力した金額や年齢が送信されることはありません。</p>
       </details>
       <p>
-        <a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a>／<a class="footer-link" href="types.html">ミラため性格診断 全16タイプ図鑑</a>／<a class="footer-link" href="columns/">お金のよみもの一覧</a>／<a class="footer-link" href="about.html">ミラためについて</a>
+        <a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a>／<a class="footer-link" href="types.html">お金のタイプ診断 全16タイプ図鑑</a>／<a class="footer-link" href="columns/">お金のよみもの一覧</a>／<a class="footer-link" href="about.html">ミラためについて</a>
       </p>
       <p>
         更新のお知らせ: <a class="footer-link" href="https://x.com/AiYKIMdrmTKjiZI" target="_blank" rel="noopener">X（ぴよため）</a>／<a class="footer-link" href="https://note.com/piyo_tame" target="_blank" rel="noopener">note</a>

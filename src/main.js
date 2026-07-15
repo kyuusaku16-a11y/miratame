@@ -8,7 +8,7 @@ import { buildReaction } from './reactions.js';
 import { buildSchedule } from './schedule.js';
 import { judgeType, buildShareText, renderShareCard, buildAxisDetails } from './share.js';
 import { buildAdvice, buildNarrativeReport, findEducationPeak } from './advice.js';
-import { buildNextSteps } from './nextstep.js';
+import { buildNextSteps, buildTrialComparison } from './nextstep.js';
 import {
   loadHistory,
   recordSnapshot,
@@ -37,6 +37,7 @@ import {
 } from './stamps.js';
 import { UPDATES, NOTE_ARTICLES, COLUMNS } from './updates.js';
 import { pickMonthlyStep } from './steps.js';
+import { addMonthlyAction, hasMonthlyAction, actionsForMonth } from './monthly-actions.js';
 
 // フォーム定義。id は state のキー名と一致。unit は UI⇄state の変換則
 // （man=万円⇄円 / pct100=%⇄比率 / raw=そのまま）。
@@ -66,6 +67,7 @@ let state = null;
 let chart = null;
 let prevKpis = null;
 let reactionTimer = null;
+let resultViewedTracked = false;
 
 const $ = (id) => document.getElementById(id);
 // index.html冒頭のSVGスプライトを参照する（固定IDのみ・ユーザー入力は通さない）
@@ -161,6 +163,23 @@ function moneyRange(weak, main) {
   return `${w.replace(/円$/, '')}〜${m}`;
 }
 
+function renderOutlookSummary(kpis, params, { masked = false, near = false } = {}) {
+  const summary = $('outlookSummary');
+  if (masked) {
+    summary.textContent = '';
+    return;
+  }
+  if (near) {
+    summary.textContent = '今の入力条件から、目標までの距離を試算しています。資産寿命は「何歳まで安心？」で確認できます。';
+    return;
+  }
+  summary.textContent = kpis.survivesToEnd
+    ? `今の条件では、${params.endAge}歳まで資産が続く見込みです。余裕の使い方や、働き方を変えた場合も試してみましょう。`
+    : kpis.lifetimeAge === null
+      ? '今の条件では、早い時期から資産を取り崩す見込みです。これは今の入力条件を続けた場合の試算で、条件を少し変えると見通しも変わります。'
+      : `今の条件では、約${kpis.lifetimeAge}歳ごろに資産が尽きる見込みです。これは今の入力条件を続けた場合の試算で、条件を少し変えると見通しも変わります。`;
+}
+
 function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow = null, weakFinal = null, weakWindow = null, goalMonths = null, masked = false } = {}) {
   if (masked) {
     // 初回ベール中: 答えは「めくってのお楽しみ」
@@ -169,6 +188,7 @@ function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow 
     $('kpi-lifetime').classList.remove('warn');
     $('lifetimeBarValue').textContent = '？歳まで';
     $('lifetimeBarValue').classList.remove('warn');
+    renderOutlookSummary(kpis, params, { masked: true, near });
     return;
   }
   $('kpi-current').textContent = fmtMoney(kpis.currentAssets);
@@ -186,6 +206,7 @@ function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow 
     $('lifetimeBarLabel').textContent = '目標まで';
     bar.textContent = life.textContent.replace('\n', '');
     bar.classList.toggle('warn', goalMonths === null);
+    renderOutlookSummary(kpis, params, { near });
     return;
   }
   $('kpi-final-label').textContent = `${params.endAge}歳時点の資産`;
@@ -207,6 +228,7 @@ function renderKpis(kpis, params, { near = false, windowYears = 5, assetsWindow 
   // スマホの固定バーにも同じ値を（こちらは1行で）
   bar.textContent = life.textContent.replace('\n', '');
   bar.classList.toggle('warn', !kpis.survivesToEnd);
+  renderOutlookSummary(kpis, params);
 }
 
 function makeCommentCard(c) {
@@ -243,7 +265,7 @@ function makeCommentCard(c) {
       p.textContent = line;
       lines.appendChild(p);
     }
-    // 章立てレポート（今回の診断）: 小見出し＋本文のくり返し
+    // 章立てレポート（今回の見通し）: 小見出し＋本文のくり返し
     for (const sec of c.sections ?? []) {
       if (!sec.lines?.length) continue;
       const h = document.createElement('strong');
@@ -522,7 +544,7 @@ function renderSchedule(rows) {
   list.appendChild(details);
 }
 
-// 一番下の「今回の診断」カード＋💡ちょこっとアドバイス
+// 一番下の「今回の見通し」カード＋補足
 function renderDiagnosis(report, tips) {
   const box = $('diagnosis');
   box.innerHTML = '';
@@ -736,6 +758,7 @@ function update({ withReaction = false, light = false } = {}) {
       : null;
 
   const kpis = deriveKpis(mainSeries, params);
+  const nextSteps = buildNextSteps(params, kpis);
   const near = state.settings.viewMode === 'near';
   const goalMonths = near ? monthsToTarget(mainSeries, params.targetAmount) : null;
   const windowYears = nearWindowYears(goalMonths);
@@ -758,7 +781,7 @@ function update({ withReaction = false, light = false } = {}) {
       const guidance = buildGuidanceCards(params, mainSeries, comments, advice);
       renderComments(guidance.cards, guidance.summary);
       renderDiagnosis(buildNarrativeReport(params, mainSeries, kpis, advice), advice.filter((a) => a.type === 'tip'));
-      renderNextSteps(buildNextSteps(params, kpis));
+      renderNextSteps(nextSteps);
       renderSchedule(buildSchedule(params));
       if (withReaction) renderReaction(buildReaction(prevKpis, kpis));
     }
@@ -774,29 +797,28 @@ function update({ withReaction = false, light = false } = {}) {
   let compare = null;
   const compareSc = state.scenarios.find((s) => s.id === compareId) ?? null;
   if (trialStep) {
-    const steps = buildNextSteps(params, kpis);
-    const cur = steps.find((s) => s.id === trialStep.id);
+    const cur = nextSteps.find((s) => s.id === trialStep.id);
     if (!cur) {
-      trialStep = null; // 状況が変わって候補から消えたら解除
-      $('nextStepMsg').hidden = true;
+      clearTrial({ track: true, notice: '入力内容が変わったため、お試しを解除しました。' });
     } else {
       trialStep = cur;
-      const tp = { ...params, ...cur.patch };
-      const tSeries = projectAssets(tp, tp.expectedReturn / 100);
-      compare = { label: `お試し: ${cur.short}`, series: tSeries };
-      const tKpis = deriveKpis(tSeries, tp);
-      $('nextStepMsg').textContent =
-        `いまのプラン: ${lifeText(kpis, params.endAge)} ／ ${cur.short}: ${lifeText(tKpis, tp.endAge)}`;
-      $('nextStepMsg').hidden = false;
+      const comparison = buildTrialComparison(params, kpis, cur);
+      if (!comparison?.valid) {
+        clearTrial({ track: true, notice: '入力内容が変わったため、お試しを解除しました。' });
+      } else {
+        compare = { label: 'お試しプラン', series: comparison.trialSeries };
+        renderTrialComparison(params, kpis, comparison);
+        syncTrialButtons();
+      }
     }
   } else {
-    $('nextStepMsg').hidden = true;
+    $('trialComparison').hidden = true;
   }
   // 保存プランとの比較線（選択中のときだけ）
   if (!compare && compareSc) {
     const cp = { ...compareSc.inputs, ...compareSc.advanced, events: compareSc.events, children: compareSc.children };
     const cSeries = projectAssets(cp, cp.expectedReturn / 100);
-    compare = { label: `保存: ${compareSc.name}`, series: cSeries };
+    compare = { label: `保存プラン: ${compareSc.name}`, series: cSeries };
     const cKpis = deriveKpis(cSeries, cp);
     $('scenarioMsg').textContent =
       `${compareSc.name}: ${lifeText(cKpis, cp.endAge)} ／ いまのプラン: ${lifeText(kpis, params.endAge)}`;
@@ -824,40 +846,139 @@ let compareId = null;
 
 // 「あなたの次の一歩」の試し比較（保存シナリオとは別の一時的な1本。stateには保存しない）
 let trialStep = null;
+let currentTrialComparison = null;
+let nextStepsShownTracked = false;
+
+function hasTriedNextStep() {
+  try {
+    return localStorage.getItem('mv-next-step-tried') === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markNextStepTried() {
+  try {
+    localStorage.setItem('mv-next-step-tried', '1');
+  } catch {
+    /* localStorage不可でも比較は続ける */
+  }
+  $('nsPlanbook').hidden = false;
+}
+
+function signedYears(years) {
+  if (years === 0) return '変化なし';
+  return `${years > 0 ? '＋' : '−'}${Math.abs(years)}年`;
+}
+
+function signedMoney(yen) {
+  if (yen === 0) return '変化なし';
+  return `${yen > 0 ? '＋' : '−'}${fmtMoney(Math.abs(yen))}`;
+}
+
+function trialLifeValue(kpis, endAge) {
+  if (kpis.survivesToEnd) return `${endAge}歳まで維持見込み`;
+  return kpis.lifetimeAge === null ? '見直しの余地あり' : `約${kpis.lifetimeAge}歳`;
+}
+
+function syncTrialButtons() {
+  const box = $('nsButtons');
+  for (const button of box.querySelectorAll('button[data-step-id]')) {
+    const active = trialStep?.id === button.dataset.stepId;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+    const label = button.querySelector('.ns-button-label');
+    if (label) label.textContent = active ? `✓ ${button.dataset.selectedLabel}` : button.dataset.label;
+  }
+}
+
+function showTrialNotice(text) {
+  $('trialNotice').textContent = text;
+  $('trialNotice').hidden = false;
+}
+
+function clearTrial({ track = false, notice = '' } = {}) {
+  const category = trialStep?.category;
+  trialStep = null;
+  currentTrialComparison = null;
+  $('trialComparison').hidden = true;
+  $('trialMonthlyMessage').hidden = true;
+  syncTrialButtons();
+  if (notice) showTrialNotice(notice);
+  if (track && category) trackEvent('next-step-cancelled', category);
+}
+
+function renderTrialComparison(params, kpis, comparison) {
+  currentTrialComparison = comparison;
+  const { step, trialKpis, lifetimeDelta, finalAssetsDelta } = comparison;
+  const endAge = params.endAge;
+  $('trialCondition').textContent = step.selectedLabel.replace('を試しています', '');
+  $('trialCurrentLife').textContent = `資産寿命：${trialLifeValue(kpis, endAge)}`;
+  $('trialCurrentFinal').textContent = `${endAge}歳時点の資産：${fmtMoney(kpis.finalAssets)}`;
+  $('trialNewLife').textContent = `資産寿命：${trialLifeValue(trialKpis, endAge)}`;
+  $('trialNewFinal').textContent = `${endAge}歳時点の資産：${fmtMoney(trialKpis.finalAssets)}`;
+  $('trialLifeDelta').textContent = signedYears(lifetimeDelta);
+  $('trialFinalDeltaLabel').textContent = `${endAge}歳時点の資産の変化`;
+  $('trialFinalDelta').textContent = signedMoney(finalAssetsDelta);
+  $('trialOutcome').textContent = step.kind === 'comfort'
+    ? `今回の試算では、この条件でも${endAge}歳まで資産が続く見込みです。`
+    : '今回の入力では、このような変化が見込まれます。';
+  const added = hasMonthlyAction(step.actionText);
+  const addButton = $('trialAddMonthlyBtn');
+  addButton.disabled = added;
+  addButton.textContent = added ? '今月の一歩に追加済み' : 'この内容を、今月の一歩にする';
+  $('trialMonthlyMessage').hidden = true;
+  $('trialComparison').hidden = false;
+}
 
 function renderNextSteps(steps) {
   const panel = $('nextSteps');
   const box = $('nsButtons');
-  // 試し中の再計算では選択状態を保つため、id が変わらない限り作り直さない
-  // （色の同期だけは毎回行う。外部で trialStep が解除されたとき active が残らないように）
   const ids = steps.map((s) => s.id).join(',');
+  panel.hidden = veiled || steps.length === 0;
+  $('nextStepsComfort').hidden = steps[0]?.kind !== 'comfort';
+  $('nsPlanbook').hidden = !hasTriedNextStep();
+  if (!panel.hidden && !nextStepsShownTracked) {
+    trackEvent('next-step-shown');
+    nextStepsShownTracked = true;
+  }
   if (box.dataset.ids === ids) {
-    for (const b of box.children) b.className = trialStep && b.dataset.stepId === trialStep.id ? 'active' : '';
+    syncTrialButtons();
     return;
   }
   box.dataset.ids = ids;
-  trialStep = steps.find((s) => trialStep && s.id === trialStep.id) ?? null;
   box.textContent = '';
-  panel.hidden = steps.length === 0;
   for (const s of steps) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.stepId = s.id;
-    btn.textContent = s.label;
-    btn.className = trialStep?.id === s.id ? 'active' : '';
+    btn.dataset.label = s.label;
+    btn.dataset.selectedLabel = s.selectedLabel;
+    btn.setAttribute('aria-pressed', 'false');
+    const label = document.createElement('span');
+    label.className = 'ns-button-label';
+    label.textContent = s.label;
+    const reason = document.createElement('small');
+    reason.textContent = s.reason;
+    btn.append(label, reason);
     btn.addEventListener('click', () => {
       const on = trialStep?.id !== s.id;
-      trialStep = on ? s : null;
       if (on) {
+        trialStep = s;
         compareId = null; // 保存シナリオの比較線とは同時に出さない（1本だけ）
-        trackEvent(`next-step-${s.id}`);
+        markNextStepTried();
+        $('trialNotice').hidden = true;
+        trackEvent('next-step-tried', s.category);
+      } else {
+        clearTrial({ track: true });
       }
       renderScenarios();
-      for (const b of box.children) b.className = b === btn && on ? 'active' : '';
+      syncTrialButtons();
       update({ light: true });
     });
     box.appendChild(btn);
   }
+  syncTrialButtons();
 }
 
 function renderScenarios() {
@@ -872,7 +993,7 @@ function renderScenarios() {
     name.title = 'タップでグラフにくらべる線を表示/非表示';
     name.addEventListener('click', () => {
       compareId = compareId === sc.id ? null : sc.id;
-      if (compareId) trialStep = null; // 比較線は1本だけ
+      if (compareId) clearTrial(); // 比較線は1本だけ
       renderScenarios();
       update();
     });
@@ -894,7 +1015,6 @@ function renderScenarios() {
 }
 
 function saveCurrentScenario() {
-  trackEvent('scenario-save');
   const name = `積立${yenToMan(state.inputs.monthlyInvest)}万・利回り${state.inputs.expectedReturn}%`;
   const res = addScenario(state, name);
   if (res.error) {
@@ -902,10 +1022,11 @@ function saveCurrentScenario() {
     $('scenarioMsg').hidden = false;
     return;
   }
+  trackEvent('plan-saved');
   state = res.state;
   saveState(state);
   compareId = res.scenario.id; // 保存した線をすぐグラフに出す
-  trialStep = null; // 比較線は1本だけ
+  clearTrial(); // 比較線は1本だけ。選択色も必ず戻す
   renderScenarios();
   update();
   renderReaction({ type: 'improved', text: 'プランを保存したよ！スライダーを動かして、未来をくらべてみて🌱' }, 6000);
@@ -1010,24 +1131,51 @@ function init() {
     noteOwnEdit();
     addEventRow();
   });
-  $('shareBtn').addEventListener('click', openShareDialog);
+  $('shareBtn').addEventListener('click', () => {
+    if (trialStep) {
+      clearTrial({ track: true });
+      update({ light: true });
+    }
+    openShareDialog();
+  });
   $('jumpFormBtn').addEventListener('click', () => {
     trackEvent('jump-form');
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
+  for (const link of document.querySelectorAll('.tb-nav a[href="#track"], .tb-nav a[href="#reading"]')) {
+    link.addEventListener('click', () => {
+      if (!trialStep) return;
+      clearTrial({ track: true });
+      update({ light: true });
+    });
+  }
+  $('nextPreview').hidden = !veiled;
+  $('resultsActions').hidden = veiled;
+  $('diagnosisHero').hidden = veiled;
+  $('shareBtn').hidden = veiled;
   if (veiled) $('chartVeil').hidden = false;
   $('veilJumpBtn').addEventListener('click', () => {
+    trackEvent('hero-main-cta');
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
-  $('veilRevealBtn').addEventListener('click', () => revealResults(false));
+  $('veilRevealBtn').addEventListener('click', () => {
+    trackEvent('hero-main-cta');
+    revealResults(false);
+  });
   $('formRevealBtn').addEventListener('click', () => revealResults(false));
-  $('veilSampleBtn').addEventListener('click', () => revealResults(true));
-  if (firstVisit) $('diagnosisHero').hidden = false;
+  $('veilSampleBtn').addEventListener('click', () => {
+    trackEvent('hero-sample-cta');
+    revealResults(true);
+  });
   $('heroDiagnoseBtn').addEventListener('click', () => {
     try {
       localStorage.setItem('mv-hero-done', '1');
     } catch {
       /* 保存できなくても診断は続行 */
+    }
+    if (trialStep) {
+      clearTrial({ track: true });
+      update({ light: true });
     }
     $('diagnosisHero').hidden = true;
     openShareDialog();
@@ -1175,8 +1323,26 @@ function init() {
     /* ignore */
   }
   $('saveScenarioBtn').addEventListener('click', saveCurrentScenario);
+  $('trialCancelBtn').addEventListener('click', () => {
+    clearTrial({ track: true });
+    update({ light: true });
+  });
+  $('trialAddMonthlyBtn').addEventListener('click', () => {
+    const step = currentTrialComparison?.step;
+    if (!step) return;
+    const result = addMonthlyAction(step.actionText);
+    const button = $('trialAddMonthlyBtn');
+    button.disabled = true;
+    button.textContent = '今月の一歩に追加済み';
+    if (result.added) {
+      $('trialMonthlyMessage').hidden = false;
+      trackEvent('next-step-added-to-monthly-action', step.category);
+      renderMonthlyActions();
+    }
+  });
   $('nsPlanbookLink').addEventListener('click', () => {
-    trackEvent('next-step-planbook');
+    trackEvent('planbook-interest');
+    $('planbookProbe').hidden = false;
     $('planbookProbe').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
   renderScenarios();
@@ -1239,6 +1405,8 @@ function init() {
 
   update();
   renderTrack();
+  if (!veiled) trackResultViewed();
+  if (prevSnap) trackEvent('monthly-review-return');
 
   // 声かけの優先順: 前回との比較 > 季節のひとこと
   const welcome = prevSnap && prevKpis ? buildWelcomeBack(prevSnap, prevKpis) : null;
@@ -1318,7 +1486,8 @@ function revealResults(fromSample = false) {
   if (!veiled) return;
   // サンプル閲覧では mv-revealed・入力値・履歴を保存しない（再訪時はベールに戻る）
   setVeilState(applyReveal({ veiled, canPersist }, fromSample));
-  trackEvent(fromSample ? 'veil-sample' : 'veil-reveal');
+  trackResultViewed();
+  clearTrial();
   $('formRevealBtn').hidden = true;
   const veil = $('chartVeil');
   veil.classList.add('lifting');
@@ -1326,13 +1495,10 @@ function revealResults(fromSample = false) {
     veil.hidden = true;
   }, 450);
   update();
-  if (!fromSample) {
-    try {
-      if (!localStorage.getItem('mv-hero-done')) $('diagnosisHero').hidden = false;
-    } catch {
-      /* ignore */
-    }
-  }
+  $('nextPreview').hidden = true;
+  $('resultsActions').hidden = false;
+  $('diagnosisHero').hidden = false;
+  $('shareBtn').hidden = false;
   document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   renderReaction(
     {
@@ -1347,12 +1513,20 @@ function revealResults(fromSample = false) {
 
 // 匿名イベント計測: 何回使われたかの回数だけをGoatCounterに送る。
 // 入力値・診断結果などの中身は一切送らない（フッターの明記どおり）
-function trackEvent(name) {
+function trackEvent(name, category = '') {
   try {
-    window.goatcounter?.count?.({ path: name, title: name, event: true });
+    const allowedCategories = new Set(['expense', 'investment', 'retirement', 'leisure', 'return-rate']);
+    const title = allowedCategories.has(category) ? `${name}: ${category}` : name;
+    window.goatcounter?.count?.({ path: name, title, event: true });
   } catch {
     /* 解析が使えなくても機能には影響させない */
   }
+}
+
+function trackResultViewed() {
+  if (resultViewedTracked) return;
+  trackEvent('result-viewed');
+  resultViewedTracked = true;
 }
 
 // ちかい目標モード（若い層向け）: プリセット＋目標連動の5〜10年スケール表示
@@ -1429,8 +1603,22 @@ function pressStamp() {
   quote.hidden = false;
 }
 
+function renderMonthlyActions() {
+  const actions = actionsForMonth();
+  const panel = $('monthlyActions');
+  const list = $('monthlyActionList');
+  list.textContent = '';
+  for (const action of actions) {
+    const item = document.createElement('li');
+    item.textContent = action.text;
+    list.appendChild(item);
+  }
+  panel.hidden = actions.length === 0;
+}
+
 // 今月の答え合わせ: パネルは状況表示＋チップ。入力→未来の変化→今月の一歩はダイアログで完結
 function renderTrack() {
+  renderMonthlyActions();
   const ymNow = monthOf();
   const hist = loadHistory();
   const cur = hist.find((s) => s.ym === ymNow);
@@ -1579,7 +1767,10 @@ function finishFutureCheck({ changed }) {
   }
   // 今月の一歩
   const v = deriveValidation(params);
-  const step = pickMonthlyStep({ params, kpis, surplus: v.surplus, ym: ymNow });
+  const savedAction = actionsForMonth().at(-1);
+  const step = savedAction
+    ? { id: 'saved-trial', text: savedAction.text }
+    : pickMonthlyStep({ params, kpis, surplus: v.surplus, ym: ymNow });
   $('fcStepText').textContent = step.text;
   if (step.href) {
     $('fcStepLinkA').href = step.href;

@@ -1,4 +1,4 @@
-// ミラため性格診断（16タイプ・入力値ベース）とシェアカード（1200×630）。
+// お金のタイプ診断（16タイプ・入力値ベース）とシェアカード（1200×630）。
 // 仕様: miratame-16types-spec.md（2026-07-09）
 // - 質問なし。シミュレーターの入力値のみから4軸を自動判定（実データなので正直）
 // - 表示ラベルは「あなたの生態」（tsuyomi=笑える具体的な一場面。動物の比喩と日常のお金の場面の二重写し）。
@@ -356,7 +356,7 @@ export async function renderShareCard(type, palette = 'berry') {
 
   ctx.fillStyle = pal.accent;
   ctx.font = `700 36px ${FONT}`;
-  ctx.fillText('ミラため性格診断', textCenterX, 140);
+  ctx.fillText('お金のタイプ診断', textCenterX, 140);
 
   // 4文字コードのチップ
   ctx.font = `700 26px ${FONT}`;

@@ -118,12 +118,14 @@ const APP_KEYS = [
   'money-vision-history',
   'money-vision-stamps',
   'money-vision-stamp-recap',
+  'money-vision-monthly-actions',
   'mv-hero-done',
   'mv-visited',
   'mv-pwa-hint-done',
   'mv-revealed',
   'mv-planbook-voted',
   'mv-planbook-seen',
+  'mv-next-step-tried',
 ];
 
 export function clearAllData(storage = globalThis.localStorage) {

@@ -11,7 +11,7 @@ const CHART_COLORS = {
   grid: '#efdcd0',
   gain: '#20a77c',
   loss: '#d97975',
-  target: '#e9a66f',
+  target: 'rgba(107, 81, 74, 0.45)',
   retirement: '#e9a66f',
   goal: '#f3cf7a',
   event: '#9fc8b3',
@@ -94,7 +94,8 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       const x = Math.min(Math.max(pt.x, chartArea.left + 60), chartArea.right - 60);
       // スマホの小さいグラフではペア画像は線の邪魔になるので描かない（🎉テキストのみ）
       const showPair = chart.width >= 520 && JOY_IMG.complete && JOY_IMG.naturalWidth > 0;
-      const y = Math.max(pt.y - 16, chartArea.top + (showPair ? 54 : 18));
+      // 達成点は定義上、目標線と同じ高さ。線の交差点から一段逃がして混雑を避ける
+      const y = Math.max(pt.y - 34, chartArea.top + (showPair ? 54 : 18));
       if (showPair) {
         // ぴよため（正方形）は控えめに: グラフは信頼感が主役の場所
         ctx.drawImage(JOY_IMG, x - 20, y - 54, 40, 40);
@@ -118,6 +119,24 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       const y = Math.max(pt.y - 36, chartArea.top + 2);
       ctx.save();
       ctx.drawImage(SAD_IMG, x - 16, y, 32, 32);
+      ctx.restore();
+    },
+  };
+
+  // 支出線の終端に金額を直接描く（右軸との往復なしで支出額が読めるように）
+  const expenseLabel = {
+    id: 'expenseLabel',
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(1);
+      const pt = meta.data[meta.data.length - 1];
+      if (!pt) return;
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.font = 'bold 12px "Zen Maru Gothic", "Hiragino Sans", sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = CHART_COLORS.expense;
+      const label = `支出 ${fmtYen(expenseData[expenseData.length - 1])}円`;
+      ctx.fillText(label, Math.min(pt.x, chartArea.right - 4), Math.max(pt.y - 10, chartArea.top + 12));
       ctx.restore();
     },
   };
@@ -226,7 +245,7 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
           : []),
       ],
     },
-    plugins: [goalBadge, depletionBadge],
+    plugins: [goalBadge, depletionBadge, expenseLabel],
     options: {
       animation: { duration: 200 },
       responsive:  true,
@@ -236,7 +255,22 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
         legend: {
           position: 'bottom',
           labels: {
-            boxWidth: 16,
+            // 線種スワッチ: 点線（支出・目標）と実線（資産）の区別が凡例だけで付く
+            usePointStyle: true,
+            pointStyle: 'line',
+            pointStyleWidth: 28,
+            // usePointStyle の既定スワッチは「先頭ポイントの点スタイル」を拾うため、
+            // 資産線（通常年は透明ポイント）が消える。線の色・太さ・点線を明示的に引き継ぐ。
+            generateLabels: (chart) => {
+              const items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              items.forEach((item) => {
+                const dataset = chart.data.datasets[item.datasetIndex];
+                item.strokeStyle = dataset.borderColor;
+                item.lineWidth = dataset.borderWidth;
+                item.lineDash = dataset.borderDash || [];
+              });
+              return items;
+            },
             color: CHART_COLORS.text,
             font: { size: 12 },
             filter: (item) => item.text !== '想定の幅',
@@ -295,8 +329,9 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
         yExpense: {
           position: 'right',
           beginAtZero: true,
-          // 支出が毎年一定でも線が上端に張り付かないよう、右軸だけ上に余白を持たせる。
-          grace: '15%',
+          // 支出線はグラフ下1/3の帯に収め、上側の資産線と交差しないようにする
+          // （右軸の上限を支出最大値の3倍に。教育費などの山も下部で読める）。
+          suggestedMax: Math.max(...expenseData, 1) * 3,
           title: { display: !matchMedia('(max-width: 940px)').matches, text: '年間支出', color: CHART_COLORS.expense },
           grid: { drawOnChartArea: false },
           ticks: {

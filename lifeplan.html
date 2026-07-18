@@ -159,6 +159,73 @@
       .lp-empty p { color: #6b514a; line-height: 1.9; }
       .lp-empty a { display: inline-block; margin-top: 8px; background: var(--color-primary-deep, #b0616d); color: #fff; text-decoration: none; border-radius: 999px; padding: 10px 22px; font-weight: 700; }
 
+      /* ===== スマホ画面: 紙の縮小表示をやめ、縦1列で読む ===== */
+      @media screen and (max-width: 640px) {
+        .lp-toolbar { padding: var(--space-3); }
+        .lp-print-btn { min-height: 44px; padding: var(--space-2) var(--space-4); }
+        .lp-hint { font-size: var(--text-sm); line-height: 1.6; }
+
+        .sheet {
+          width: calc(100vw - (var(--space-3) * 2));
+          min-height: 0;
+          aspect-ratio: auto;
+          margin: var(--space-2) auto var(--space-5);
+          padding: var(--space-4);
+        }
+        .sheet + .sheet { margin-top: 0; }
+        .sheet-head { align-items: flex-start; gap: var(--space-2); }
+        .sheet-head img { width: 40px; height: 40px; }
+        .sheet-title h1 { font-size: 19px; }
+        .sheet-title p { font-size: var(--text-sm); line-height: 1.5; }
+        .sheet-date { flex: none; width: 54px; height: 54px; }
+
+        .lp-assump,
+        .lp-cols,
+        .lp-axes { grid-template-columns: minmax(0, 1fr); }
+        .lp-assump { gap: var(--space-2); }
+        .lp-assump div { padding: var(--space-2) var(--space-3); }
+        .lp-assump dt { font-size: var(--text-sm); }
+        .lp-assump dd { font-size: 14px; }
+        .lp-cols { gap: var(--space-3); }
+
+        .lp-sec-h,
+        .lp-report h3 { font-size: 14px; }
+        .lp-report p,
+        .lp-summary p,
+        .lp-aruaru li,
+        .lp-otoshiana,
+        .lp-type-line { font-size: 14px; }
+        .lp-type-head { align-items: flex-start; gap: var(--space-2); }
+        .lp-type { padding: var(--space-3); }
+        .lp-type img { width: 68px; height: 68px; }
+        .lp-type-line { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+        .lp-type-line strong { font-size: var(--text-sm); }
+
+        /* 年表は各年を縦カードにし、4列の小さい表を避ける */
+        .lp-table thead { display: none; }
+        .lp-table,
+        .lp-table tbody,
+        .lp-table tr { display: block; width: 100%; }
+        .lp-table tr { margin-bottom: var(--space-2); border: 1px solid #f0e4d5; border-radius: 8px; overflow: hidden; }
+        .lp-table td {
+          display: grid;
+          grid-template-columns: 88px minmax(0, 1fr);
+          gap: var(--space-2);
+          padding: var(--space-2) var(--space-3);
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        .lp-table td::before { color: #8d786f; font-size: var(--text-sm); font-weight: 700; }
+        .lp-table td:nth-child(1)::before { content: '年齢'; }
+        .lp-table td:nth-child(2)::before { content: '西暦'; }
+        .lp-table td:nth-child(3)::before { content: '資産の見込み'; }
+        .lp-table td:nth-child(4)::before { content: 'できごと'; }
+        .lp-table td.num { text-align: left; }
+
+        .sheet-foot { align-items: flex-start; }
+        .sheet-foot p { font-size: var(--text-xs); }
+      }
+
       /* ===== 印刷: 紙そのものになる ===== */
       @page { size: A4 portrait; margin: 0; }
       @media print {

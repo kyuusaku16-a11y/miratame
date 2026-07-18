@@ -55,9 +55,9 @@
       </a>
       <nav class="tb-nav" aria-label="メニュー">
         <button id="jumpFormBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>入力</button>
-        <a href="#outlook"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>見通し</a>
-        <a href="#track"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>みなおし</a>
-        <a href="#reading"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの</a>
+        <a id="navOutlook" class="tb-mobile-optional" href="#outlook" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>見通し</a>
+        <a id="navTrack" class="tb-mobile-optional" href="#track" hidden><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>みなおし</a>
+        <a class="tb-mobile-optional" href="#reading"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの</a>
       </nav>
       <button id="shareBtn" class="tb-cta" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg><span class="dg-full">タイプ診断</span><span class="dg-short">タイプ</span></button>
     </header>
@@ -143,8 +143,8 @@
           <!-- 初回訪問だけのベール: 結果を「自分でめくる」ごほうびにする -->
           <div class="chart-veil" id="chartVeil" hidden>
             <div class="veil-copy">
-              <p class="veil-title">将来のお金を、<br />今できることから<span class="nowrap">見える化。</span></p>
-              <p class="veil-sub">今の資産・収入・支出・積立額から、教育費・住宅費・老後まで含めた資産寿命をシミュレーションします。</p>
+              <p class="veil-title">いまのお金で、<br />何歳まで<span class="nowrap">暮らせる？</span></p>
+              <p class="veil-sub">資産寿命が、30秒でわかる。今の資産・収入・支出から、教育費・住宅・老後まで含めて試算します。</p>
               <button id="veilJumpBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>無料でシミュレーションを始める</button>
               <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>この数字で結果を見る</button>
               <button id="veilSampleBtn" type="button" class="veil-sample">サンプル結果を見る</button>
@@ -157,7 +157,7 @@
                   <div class="pm-card"><span class="pm-label">資産寿命</span><span class="pm-value">83<small>歳まで</small></span></div>
                   <div class="pm-card pm-chart"><span class="pm-label">資産推移グラフ</span><svg viewBox="0 0 200 74" aria-hidden="true"><path d="M0 64 C 40 60, 70 40, 105 30 C 135 22, 165 34, 200 56 L200 74 L0 74 Z" fill="#86a84f" opacity="0.22" /><path d="M0 64 C 40 60, 70 40, 105 30 C 135 22, 165 34, 200 56" fill="none" stroke="#567536" stroke-width="2.4" stroke-linecap="round" /><line x1="0" y1="70" x2="200" y2="70" stroke="#e9e1d5" stroke-width="1" /></svg></div>
                   <div class="pm-card"><span class="pm-label">目標達成率 72%</span><div class="pm-goal-bar"><i></i></div></div>
-                  <div class="pm-card pm-next"><span class="pm-label">あなたの次の一歩</span><strong>積立を月1万円増やした場合を試す</strong></div>
+                  <div class="pm-card pm-range"><span class="pm-label">資産寿命の見通し</span><strong><span>低め 78歳</span><i>〜</i><span>中間 83歳</span></strong></div>
                 </div>
               </div>
               <p class="mock-note">表示例です。実際の結果は入力内容により変わります。</p>
@@ -169,34 +169,24 @@
             <section class="panel outlook-summary-card" aria-labelledby="outlook">
               <div class="outlook-card-head">
                 <h2 class="outlook-title" id="outlook"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>今回の見通し</h2>
-                <span>今の条件を続けた場合</span>
               </div>
               <div class="outlook-metrics">
-                <div class="outlook-metric">
-                  <span class="result-icon" aria-hidden="true"><img src="assets/piyo-good.png" alt="" /></span>
-                  <div>
-                    <span class="outlook-metric-label" id="kpi-lifetime-label">資産寿命</span>
-                    <span class="outlook-metric-value kpi-value" id="kpi-lifetime">-</span>
-                  </div>
+                <div class="outlook-metric outlook-metric-lifetime">
+                  <span class="outlook-metric-label" id="kpi-lifetime-label">資産寿命（推定）</span>
+                  <span class="outlook-metric-value kpi-value" id="kpi-lifetime">-</span>
+                  <span class="outlook-metric-description" id="kpi-lifetime-description">-</span>
                 </div>
-                <div class="outlook-metric">
-                  <span class="result-icon result-icon-blue" aria-hidden="true"><img src="assets/sprout.png" alt="" /></span>
-                  <div>
-                    <span class="outlook-metric-label" id="kpi-final-label">100歳時点の資産</span>
-                    <span class="outlook-metric-value kpi-value" id="kpi-final">-</span>
-                  </div>
+                <div class="outlook-metric outlook-metric-final">
+                  <span class="outlook-metric-label" id="kpi-final-label">100歳時点の資産（推定）</span>
+                  <span class="outlook-metric-value kpi-value" id="kpi-final">-</span>
+                  <span class="outlook-metric-description" id="kpi-final-description">-</span>
                 </div>
                 <div class="outlook-metric outlook-metric-goal">
-                  <span class="goal-progress-ring" id="goalProgressRing" role="img" aria-label="目標への現在地"><span id="kpi-goal-progress">-</span></span>
-                  <div>
-                    <span class="outlook-metric-label">目標への現在地</span>
-                    <span class="goal-progress-gap" id="kpi-goal-gap">-</span>
-                  </div>
+                  <span class="outlook-metric-label">目標への現在地</span>
+                  <span class="outlook-metric-value goal-progress-ring" id="goalProgressRing" role="img" aria-label="目標への現在地"><span id="kpi-goal-progress">-</span></span>
+                  <span class="outlook-metric-description goal-progress-gap" id="kpi-goal-gap">-</span>
                 </div>
               </div>
-              <p class="outlook-basis">今の入力条件をそのまま続けた場合の試算です。</p>
-              <p class="outlook-summary" id="outlookSummary"></p>
-              <img class="outlook-piyo" src="assets/piyo-good.png" alt="" aria-hidden="true" />
             </section>
 
             <div class="panel cockpit-main">
@@ -301,48 +291,44 @@
         <p class="next-preview-caption">表示例です。実際の結果は入力内容によって変わります。</p>
       </section>
 
-      <!-- 結果を確認したあとの再訪導線と、独立したタイプ診断 -->
-      <section class="results-actions" id="resultsActions">
-        <h2 class="zone-label">今月の一歩</h2>
-        <div class="panel track" id="track">
-          <div class="track-body">
-            <div class="track-col track-monthly">
-              <div class="stamps-head"><span class="stamps-title">今月、変わったことある？</span></div>
-              <p class="track-status" id="trackStatus"></p>
-              <div class="monthly-actions" id="monthlyActions" hidden>
-                <strong>今月の一歩</strong>
-                <ul id="monthlyActionList"></ul>
-              </div>
-              <div class="fc-chips">
-                <button type="button" class="fc-chip" data-field="totalAsset">資産</button>
-                <button type="button" class="fc-chip" data-field="annualIncome">収入</button>
-                <button type="button" class="fc-chip" data-field="annualExpense">生活費</button>
-                <button type="button" class="fc-chip" data-field="monthlyInvest">積立額</button>
-                <button type="button" class="fc-chip fc-same" id="fcSameBtn">特に変わっていない</button>
-              </div>
-              <p class="field-note">変わったところだけ直して、未来をもう一度見てみよう（数字は端末内のみ）</p>
-            </div>
-            <div class="track-col" id="stampCol" hidden>
-              <div class="stamps-head"><span class="stamps-title">まいにちのスタンプ</span><span class="stamps-count" id="stampCount"></span></div>
-              <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
-              <button id="stampBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>今日のスタンプを押す</button>
-              <p class="stamp-quote" id="stampQuote" hidden></p>
-            </div>
+      <!-- グラフより下に続く詳しい見通し -->
+      <section class="results-mid">
+        <h2 class="zone-label">これからの見通し</h2>
+        <div class="below-chart">
+          <div class="panel schedule" id="schedule" hidden>
+            <h2 id="scheduleToggle">これからの大きな支出<span class="chev" aria-hidden="true"></span></h2>
+            <div id="scheduleList"></div>
           </div>
-          <p class="field-note pwa-hint" id="pwaHint" hidden>
-            このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
-            <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>
-          </p>
+          <div class="panel comments" id="comments"></div>
+          <div class="summary-comment" id="summaryComment"></div>
         </div>
 
-        <h2 class="zone-label">お金のタイプ診断</h2>
-        <div class="diagnosis-hero" id="diagnosisHero" hidden>
-          <img class="dh-img" src="assets/piyo-notice.png" alt="" aria-hidden="true" />
-          <div class="dh-text">
-            <strong>30秒でわかる「お金のタイプ診断」</strong>
-            <span>あなたは16タイプのどれ？ いま入れた数字からわかります</span>
-          </div>
-          <button id="heroDiagnoseBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg>タイプを見てみる</button>
+        <!-- きょうのよみもの: 日替わりでコラムを1本だけ（一覧はページ下部とcolumns/へ） -->
+        <a class="daily-reading" id="dailyReading" href="columns/" hidden>
+          <span class="dr-label"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>きょうのよみもの</span>
+          <strong class="dr-title" id="dailyReadingTitle"></strong>
+          <span class="dr-desc" id="dailyReadingDesc"></span>
+        </a>
+      </section>
+
+      <!-- 詳細な条件と補足説明はPCでも全幅 -->
+      <section class="results-more">
+        <h2 class="zone-label">詳細な条件と補足説明</h2>
+        <div class="diagnosis-area" id="diagnosis"></div>
+        <p class="lifeplan-link">
+          <a id="lifeplanBtn" href="lifeplan.html"><svg class="ico" aria-hidden="true"><use href="#i-note"/></svg>ライフプラン表にする（印刷・PDF）</a>
+          <span>年表と診断を、家族と話せるA4・2枚組に</span>
+        </p>
+
+        <!-- 有料プランブックの需要調査（正直なフェイクドア: まだ無いことを隠さず、欲しい人の数だけ数える） -->
+        <div class="panel planbook-probe" id="planbookProbe" hidden>
+          <p class="pb-title">🌱 企画を検討しています: ミラためプランブック</p>
+          <p class="pb-text">
+            「今のまま」「積立をすこし増やしたら」「退職を1年変えたら」——
+            3つの未来をひとつの表で見比べて、家族と話せる有料のプラン集（想定1,480円・買い切り）。希望が集まったら制作します。
+          </p>
+          <button id="planbookBtn" type="button">この価格ならほしいかも（匿名で1票だけ伝わります）</button>
+          <p class="field-note" id="planbookThanks" hidden>ありがとうございます！作る励みになります🌱 続報はXとnoteでお知らせします</p>
         </div>
       </section>
 
@@ -350,6 +336,8 @@
       <div class="dash">
       <!-- stickyフォームの可動範囲を閉じ込める実体ボックス（display:contentsの.dashは範囲にならない） -->
       <div class="form-col">
+      <details id="formSettings" class="form-settings" open>
+        <summary><span class="form-label-text">🔢 数字を変える</span></summary>
       <section class="panel form">
         <h2><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>シミュレーション設定</h2>
         <p class="form-lede">数字を変えると、見通しとグラフにすぐ反映されます。</p>
@@ -380,7 +368,8 @@
           </div>
         </details>
 
-        <label class="form-field-primary" data-unit="万円"><span class="form-label-text"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg>目標金額</span><input type="text" inputmode="numeric" id="targetAmount" /></label>
+        <h3 class="goal-input-heading">🌱 目標も見たい人は</h3>
+        <label class="sub goal-field" data-unit="万円">目標金額<input type="text" inputmode="numeric" id="targetAmount" /></label>
         <div class="goal-presets" id="goalPresets"></div>
         <p class="field-note">※ちかい目標を選ぶと、目標に合わせた5〜10年のグラフに切り替わります</p>
 
@@ -434,52 +423,57 @@
           <p id="backupMsg" class="field-note" hidden aria-live="polite"></p>
         </details>
       </section>
+      </details>
       </div>
 
-      <!-- グラフより下・PCでは右カラムに続く（スマホでは入力フォームの後ろ） -->
-      <section class="results-mid">
-        <h2 class="zone-label">これからの見通し</h2>
-        <div class="below-chart">
-          <div class="panel schedule" id="schedule" hidden>
-            <h2 id="scheduleToggle">これからの大きな支出<span class="chev" aria-hidden="true"></span></h2>
-            <div id="scheduleList"></div>
+      </div>
+
+      <!-- 結果を確認したあとの独立したタイプ診断と再訪導線 -->
+      <section class="results-actions" id="resultsActions">
+        <h2 class="zone-label">お金のタイプ診断</h2>
+        <div class="diagnosis-hero" id="diagnosisHero" hidden>
+          <img class="dh-img" src="assets/piyo-notice.png" alt="" aria-hidden="true" />
+          <div class="dh-text">
+            <strong>30秒でわかる「お金のタイプ診断」</strong>
+            <span>あなたは16タイプのどれ？ いま入れた数字からわかります</span>
           </div>
-          <div class="panel comments" id="comments"></div>
-          <div class="summary-comment" id="summaryComment"></div>
+          <button id="heroDiagnoseBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-acorn"/></svg>タイプを見てみる</button>
         </div>
 
-        <!-- きょうのよみもの: 日替わりでコラムを1本だけ（一覧はページ下部とcolumns/へ） -->
-        <a class="daily-reading" id="dailyReading" href="columns/" hidden>
-          <span class="dr-label"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>きょうのよみもの</span>
-          <strong class="dr-title" id="dailyReadingTitle"></strong>
-          <span class="dr-desc" id="dailyReadingDesc"></span>
-        </a>
-
+        <h2 class="zone-label">今月の一歩</h2>
+        <div class="panel track" id="track">
+          <div class="track-body">
+            <div class="track-col track-monthly">
+              <div class="stamps-head"><span class="stamps-title">今月、変わったことある？</span></div>
+              <p class="track-status" id="trackStatus"></p>
+              <div class="monthly-actions" id="monthlyActions" hidden>
+                <strong>今月の一歩</strong>
+                <ul id="monthlyActionList"></ul>
+              </div>
+              <div class="fc-chips">
+                <button type="button" class="fc-chip" data-field="totalAsset">資産</button>
+                <button type="button" class="fc-chip" data-field="annualIncome">収入</button>
+                <button type="button" class="fc-chip" data-field="annualExpense">生活費</button>
+                <button type="button" class="fc-chip" data-field="monthlyInvest">積立額</button>
+                <button type="button" class="fc-chip fc-same" id="fcSameBtn">特に変わっていない</button>
+              </div>
+              <p class="field-note">変わったところだけ直して、未来をもう一度見てみよう（数字は端末内のみ）</p>
+            </div>
+            <div class="track-col" id="stampCol" hidden>
+              <div class="stamps-head"><span class="stamps-title">まいにちのスタンプ</span><span class="stamps-count" id="stampCount"></span></div>
+              <div class="stamps-row" id="stampsRow" aria-hidden="true"></div>
+              <button id="stampBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>今日のスタンプを押す</button>
+              <p class="stamp-quote" id="stampQuote" hidden></p>
+            </div>
+          </div>
+          <p class="field-note pwa-hint" id="pwaHint" hidden>
+            このページを「ホーム画面に追加」しておくと、毎月1タップで開けます
+            <button id="pwaHintClose" type="button" aria-label="閉じる">×</button>
+          </p>
+        </div>
       </section>
 
-      </div>
-
-      <!-- 詳細な条件と補足説明はPCでも全幅 -->
-      <section class="results-more">
-        <h2 class="zone-label">詳細な条件と補足説明</h2>
-        <div class="diagnosis-area" id="diagnosis"></div>
-        <p class="lifeplan-link">
-          <a id="lifeplanBtn" href="lifeplan.html"><svg class="ico" aria-hidden="true"><use href="#i-note"/></svg>ライフプラン表にする（印刷・PDF）</a>
-          <span>年表と診断を、家族と話せるA4・2枚組に</span>
-        </p>
-
-        <!-- 有料プランブックの需要調査（正直なフェイクドア: まだ無いことを隠さず、欲しい人の数だけ数える） -->
-        <div class="panel planbook-probe" id="planbookProbe" hidden>
-          <p class="pb-title">🌱 企画を検討しています: ミラためプランブック</p>
-          <p class="pb-text">
-            「今のまま」「積立をすこし増やしたら」「退職を1年変えたら」——
-            3つの未来をひとつの表で見比べて、家族と話せる有料のプラン集（想定1,480円・買い切り）。希望が集まったら制作します。
-          </p>
-          <button id="planbookBtn" type="button">この価格ならほしいかも（匿名で1票だけ伝わります）</button>
-          <p class="field-note" id="planbookThanks" hidden>ありがとうございます！作る励みになります🌱 続報はXとnoteでお知らせします</p>
-        </div>
-
-        <div class="panel reading" id="reading">
+      <section class="panel reading" id="reading">
           <h2><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの・お知らせ</h2>
           <!-- 上位3本は中心ユーザー（資産形成中）向け。初心者向けはその下と columns/ に残す -->
           <ul class="reading-list" id="readingList">
@@ -492,7 +486,6 @@
           </ul>
           <p class="reading-more"><a href="columns/">よみものをすべて見る →</a></p>
           <ul class="updates-list" id="updatesList"></ul>
-        </div>
       </section>
 
       <!-- スクロールしてきた初見の人向けの自己紹介（オカネコの「〜とは」方式）。SEO的にもトップに説明テキストを持たせる -->

@@ -37,6 +37,7 @@ import {
 } from './stamps.js';
 import { UPDATES, NOTE_ARTICLES, COLUMNS } from './updates.js';
 import { pickMonthlyStep } from './steps.js';
+import { buildFinalAssetDescription, buildLifetimeOutlook, hasOutlookGoal } from './outlook.js';
 import {
   addMonthlyAction,
   hasMonthlyAction,
@@ -154,44 +155,21 @@ function syncSliders() {
   }
 }
 
-// 「1.9億〜4.3億円」のようなレンジ表記。ほぼ同じ値ならレンジにしない
-function moneyRange(weak, main) {
-  if (weak === null || weak === undefined) return fmtMoney(main);
-  const w = fmtMoney(weak);
-  const m = fmtMoney(main);
-  if (w === m) return m;
-  return `${w.replace(/円$/, '')}〜${m}`;
-}
-
-function renderOutlookSummary(kpis, params, { masked = false } = {}) {
-  const summary = $('outlookSummary');
-  if (masked) {
-    summary.textContent = '';
-    return;
-  }
-  summary.textContent = kpis.survivesToEnd
-    ? `今の条件では、${params.endAge}歳まで資産が続く見込みです。余裕の使い方や、働き方を変えた場合も試してみましょう。`
-    : kpis.lifetimeAge === null
-      ? '今の条件では、早い時期から資産を取り崩す見込みです。これは今の入力条件を続けた場合の試算で、条件を少し変えると見通しも変わります。'
-      : `今の条件では、約${kpis.lifetimeAge}歳ごろに資産が尽きる見込みです。これは今の入力条件を続けた場合の試算で、条件を少し変えると見通しも変わります。`;
-}
-
 function renderGoalProgress(kpis, params, { masked = false } = {}) {
+  const metrics = document.querySelector('.outlook-metrics');
+  const goalMetric = document.querySelector('.outlook-metric-goal');
   const ring = $('goalProgressRing');
   const value = $('kpi-goal-progress');
   const gap = $('kpi-goal-gap');
+  const hasGoal = hasOutlookGoal(params);
+  metrics.classList.toggle('is-two-column', !hasGoal);
+  goalMetric.hidden = !hasGoal;
+  if (!hasGoal) return;
   if (masked) {
     ring.style.setProperty('--goal-progress', '0%');
     ring.setAttribute('aria-label', '目標への現在地は結果表示後に確認できます');
     value.textContent = '？';
     gap.textContent = '結果表示後に確認';
-    return;
-  }
-  if (params.targetAmount <= 0) {
-    ring.style.setProperty('--goal-progress', '0%');
-    ring.setAttribute('aria-label', '目標金額は未設定です');
-    value.textContent = '—';
-    gap.textContent = '目標金額は未設定';
     return;
   }
   const progress = Math.max(0, Math.min(100, (kpis.currentAssets / params.targetAmount) * 100));
@@ -200,39 +178,42 @@ function renderGoalProgress(kpis, params, { masked = false } = {}) {
   ring.setAttribute('aria-label', `目標金額に対する現在地 ${rounded}%`);
   value.textContent = `${rounded}%`;
   gap.textContent = progress >= 100
-    ? '目標金額に到達'
-    : `あと${fmtMoney(params.targetAmount - kpis.currentAssets)}`;
+    ? '目標金額に到達しています。'
+    : `あと${fmtMoney(params.targetAmount - kpis.currentAssets)}です。`;
 }
 
-function renderKpis(kpis, params, { weakFinal = null, masked = false } = {}) {
+function renderKpis(kpis, params, { masked = false } = {}) {
   renderGoalProgress(kpis, params, { masked });
   if (masked) {
     // 初回ベール中: 答えは「めくってのお楽しみ」
     $('kpi-final').textContent = '？';
-    $('kpi-lifetime').textContent = '？歳まで';
+    $('kpi-final-description').textContent = '結果表示後に確認できます。';
+    $('kpi-lifetime').textContent = '？';
+    $('kpi-lifetime-description').textContent = '結果表示後に確認できます。';
     $('kpi-lifetime').classList.remove('warn');
     $('lifetimeBarValue').textContent = '？歳まで';
     $('lifetimeBarValue').classList.remove('warn');
-    renderOutlookSummary(kpis, params, { masked: true });
     return;
   }
   const life = $('kpi-lifetime');
   const bar = $('lifetimeBarValue');
-  $('kpi-final-label').textContent = `${params.endAge}歳時点の資産`;
-  $('kpi-final').textContent = moneyRange(weakFinal, kpis.finalAssets);
-  $('kpi-lifetime-label').textContent = '資産寿命';
+  const lifetimeOutlook = buildLifetimeOutlook(kpis, params);
+  $('kpi-final-label').textContent = `${params.endAge}歳時点の資産（推定）`;
+  // 幅は出さず標準ケースの1つの数字だけ（「推定」表記で十分。幅はグラフの帯が担う）
+  $('kpi-final').textContent = fmtMoney(kpis.finalAssets);
+  $('kpi-final-description').textContent = buildFinalAssetDescription(kpis, params);
+  $('kpi-lifetime-label').textContent = '資産寿命（推定）';
+  $('kpi-lifetime-description').textContent = lifetimeOutlook.description;
   $('lifetimeBarLabel').textContent = '資産寿命';
-  // 改行位置は \n で明示（.kpi-value は white-space: pre-line。単語の途中で折れないように）
-  life.textContent = kpis.survivesToEnd
-    ? `${params.endAge}歳まで\n維持見込み`
-    : kpis.lifetimeAge === null
-      ? '見直しの\n余地あり'
-      : `約${kpis.lifetimeAge}歳まで`;
+  life.textContent = lifetimeOutlook.value;
   life.classList.toggle('warn', !kpis.survivesToEnd);
-  // スマホの固定バーにも同じ値を（こちらは1行で）
-  bar.textContent = life.textContent.replace('\n', '');
+  // スマホの固定バーは従来どおり「何歳まで」を1行で示す
+  bar.textContent = kpis.survivesToEnd
+    ? `${params.endAge}歳まで維持`
+    : kpis.lifetimeAge === null
+      ? '見直しの余地あり'
+      : `約${kpis.lifetimeAge}歳まで`;
   bar.classList.toggle('warn', !kpis.survivesToEnd);
-  renderOutlookSummary(kpis, params);
 }
 
 function renderGraphContext(kpis, params, goalMonths, windowYears) {
@@ -321,6 +302,7 @@ function makeCommentCard(c) {
       chip.textContent = a.label;
       chip.addEventListener('click', () => {
         const el = $(a.targetId);
+        $('formSettings').open = true;
         const parentDetails = el.closest('details');
         if (parentDetails) parentDetails.open = true;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -476,6 +458,7 @@ function renderSchedule(rows) {
   const sumOf = (list) => list.reduce((s, e) => s + (e.amount || 0), 0);
 
   const jumpTo = (id) => {
+    $('formSettings').open = true;
     $('advanced').open = true;
     $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -792,10 +775,7 @@ function update({ withReaction = false, light = false } = {}) {
   const goalMonths = near ? monthsToTarget(mainSeries, params.targetAmount) : null;
   const windowYears = nearWindowYears(goalMonths);
   withScrollAnchor(() => {
-    renderKpis(kpis, params, {
-      masked: veiled,
-      weakFinal: weakSeries ? weakSeries[weakSeries.length - 1].assets : null,
-    });
+    renderKpis(kpis, params, { masked: veiled });
     renderGraphContext(kpis, params, goalMonths, windowYears);
     syncModeButtons();
     renderValidation(deriveValidation(params));
@@ -1124,6 +1104,7 @@ function init() {
     /* localStorage 不可なら常に非表示 */
   }
   syncResultVisibility();
+  formCollapseMedia.addEventListener('change', syncFormLayout);
   state = loadState();
   // デプロイ直後の新旧モジュール混在キャッシュ対策: 配列フィールドを保証する
   state.events ??= [];
@@ -1202,6 +1183,7 @@ function init() {
   });
   $('jumpFormBtn').addEventListener('click', () => {
     trackEvent('jump-form');
+    $('formSettings').open = true;
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
   for (const link of document.querySelectorAll('.tb-nav a[href="#track"], .tb-nav a[href="#reading"]')) {
@@ -1218,6 +1200,7 @@ function init() {
   if (veiled) $('chartVeil').hidden = false;
   $('veilJumpBtn').addEventListener('click', () => {
     trackEvent('hero-main-cta');
+    $('formSettings').open = true;
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
   $('veilRevealBtn').addEventListener('click', () => {
@@ -1271,6 +1254,7 @@ function init() {
   // 「数字を変える」の利用数は、下から開く入力シートを作るかどうかの判断材料（計測ドリブン）
   $('lifetimeEditBtn').addEventListener('click', () => {
     trackEvent('bar-edit');
+    $('formSettings').open = true;
     document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
   });
   const visible = new Map();
@@ -1485,6 +1469,7 @@ function init() {
   const searchParams = new URLSearchParams(location.search);
   if (searchParams.has('diagnose')) {
     if (!veiled) openShareDialog();
+    else blockWhileVeiled('タイプ診断には、先に数字の入力が必要です🌱', { scrollToForm: true });
     searchParams.delete('diagnose');
     const rest = searchParams.toString();
     history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
@@ -1502,10 +1487,23 @@ const FEEDBACK_URL = '';
 let veiled = false;
 let canPersist = true;
 const veilEdited = new Set();
+const formCollapseMedia = matchMedia('(max-width: 940px)');
+
+// HTMLソースは結果後の読み順を優先する。初回ベール中だけ入力を比較予告の直後へ戻し、
+// 結果後のスマホでは入力全体を畳む。PCではdetailsを常に開いて従来の操作盤を保つ。
+function syncFormLayout() {
+  const dash = document.querySelector('.dash');
+  if (veiled) $('nextPreview').after(dash);
+  else document.querySelector('.results-more').after(dash);
+  $('formSettings').open = veiled || !formCollapseMedia.matches;
+}
 
 function syncResultVisibility() {
   $('outlookResult').hidden = veiled;
   $('resultsCockpit').classList.toggle('is-veiled', veiled);
+  $('navOutlook').hidden = veiled;
+  $('navTrack').hidden = veiled;
+  syncFormLayout();
 }
 
 // veil.js の遷移結果を反映し、必要なら mv-revealed を書く
@@ -1959,7 +1957,7 @@ function renderAxisMeters(params) {
 let currentShare = null; // { blob, file, text, url }
 
 // ベール中のお預け演出（診断・ライフプラン表で共用）。ブロックしたら true
-function blockWhileVeiled(message) {
+function blockWhileVeiled(message, { scrollToForm = false } = {}) {
   if (!veiled) return false;
   const veil = $('chartVeil');
   const title = veil.querySelector('.veil-title');
@@ -1975,6 +1973,11 @@ function blockWhileVeiled(message) {
   const jumpBtn = $('veilJumpBtn');
   jumpBtn.classList.remove('pulse-once');
   requestAnimationFrame(() => jumpBtn.classList.add('pulse-once'));
+  if (scrollToForm) {
+    setTimeout(() => {
+      document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 900);
+  }
   setTimeout(() => {
     veil.classList.remove('veil-shake');
     title.innerHTML = original;

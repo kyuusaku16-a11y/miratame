@@ -1,6 +1,6 @@
 import { projectAssets, deriveKpis, educationCostAt, monthsToTarget, nearWindowYears, EDUCATION_COURSES } from './calc.js';
 import { buildComments } from './comments.js';
-import { loadState, saveState, normalizeState, addScenario, removeScenario, clearAllData, DEFAULT_ADVANCED, SIMULATION_END_AGE } from './storage.js';
+import { loadState, saveState, normalizeState, addScenario, removeScenario, clearAllData, SIMULATION_END_AGE } from './storage.js';
 import { renderChart } from './chart.js';
 import { fmtMoney, manToYen, yenToMan, normalizeNumInput, formatNumInput } from './format.js';
 import { deriveValidation, clampInvestedAsset } from './validation.js';
@@ -242,8 +242,8 @@ function renderGraphContext(kpis, params, goalMonths, windowYears) {
   nearButton.disabled = !hasGoal;
   $('goalTabHint').hidden = hasGoal;
   $('chartDescription').textContent = near
-    ? '今のペースで、目標までの資産推移を確認できます。'
-    : '今のペースで、資産が将来どう動くかを確認できます。';
+    ? '今のペースで、目標までの資産と年間支出を確認できます。線にカーソルを合わせるかタップすると、年齢ごとの数字が見られます。'
+    : '今のペースで、資産と年間支出が将来どう動くかを確認できます。線にカーソルを合わせるかタップすると、年齢ごとの数字が見られます。';
   $('goalResult').hidden = !near;
   $('chartPanel').setAttribute('aria-labelledby', near ? 'modeNear' : 'modeLife');
   if (!near) return;
@@ -321,6 +321,8 @@ function makeCommentCard(c) {
       chip.textContent = a.label;
       chip.addEventListener('click', () => {
         const el = $(a.targetId);
+        const parentDetails = el.closest('details');
+        if (parentDetails) parentDetails.open = true;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.focus({ preventScroll: true });
       });
@@ -453,9 +455,6 @@ function renderAdvancedSummary() {
   const a = state.advanced;
   $('advancedSummary').textContent =
     `年金${yenToMan(a.pensionAnnual)}万円・${a.pensionStartAge}歳から / 老後支出は現役の${Math.round(a.retiredExpenseRatio * 100)}%`;
-  // 既定値のままなら「平均値で計算中」注記を出す（§4.3。変更したら即時消える）
-  const isDefault = Object.keys(DEFAULT_ADVANCED).every((k) => a[k] === DEFAULT_ADVANCED[k]);
-  $('defaultsNote').hidden = !isDefault;
 }
 
 function renderSchedule(rows) {
@@ -856,9 +855,9 @@ function update({ withReaction = false, light = false } = {}) {
   // ちかい目標モードはグラフを目標に合わせた年数（5〜10年）だけに
   const chartSeries = near ? mainSeries.slice(0, windowYears + 1) : mainSeries;
   const weakChart = weakSeries
-    ? { rate: weakRate, series: near ? weakSeries.slice(0, windowYears + 1) : weakSeries }
+    ? { series: near ? weakSeries.slice(0, windowYears + 1) : weakSeries }
     : null;
-  // 比較中は弱気の帯を消して2本だけに（線が4本重なると読めない。帯は通常表示に戻れば復活）
+  // 比較中は想定の幅を消して、比較線と支出線を読みやすくする。
   chart = renderChart($('chart'), chartSeries, params, chart, compare, compare ? null : weakChart);
 }
 
@@ -1130,8 +1129,7 @@ function init() {
   state.events ??= [];
   state.children ??= [];
   writeForm();
-  // 投資の折りたたみ: すでに投資の数字が入っている人には開いて見せる。
-  // 初回（ベール中）はサンプル値に投資が含まれていても閉じたまま＝見た目4項目を守る
+  // 投資関連は任意項目としてまとめる。保存済みの運用額か積立額がある人だけ開いて復元する。
   $('investing').open = !veiled && (state.inputs.investedAsset > 0 || state.inputs.monthlyInvest > 0);
   renderEvents();
   renderChildren();
@@ -1182,11 +1180,6 @@ function init() {
     const raw = normalizeNumInput(t.value);
     if (raw === '' || Number.isNaN(Number(raw))) return;
     t.value = formatNumInput(Number(raw));
-  });
-
-  $('defaultsNote').addEventListener('click', () => {
-    $('advanced').open = true;
-    $('pensionAnnual').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
   renderEventPresets();

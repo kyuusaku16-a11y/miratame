@@ -249,7 +249,7 @@ h2 .ico { margin-right: 8px; }
 .form-label-text .ico { width: 20px; height: 20px; margin-right: 8px; color: #b27a39; }
 /* 数値欄は type="text" + inputmode（カンマ・全角の受け付けと表示整形のため）。
    16px未満だとiOS Safariがフォーカス時に画面をズームしてしまうため、16pxを下限にする */
-.form input[inputmode], .form select { padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 10px; font-size: 16px; color: var(--color-ink); background: #fffdf9; font-family: var(--font-body); }
+.form input[inputmode], .form select { padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 10px; font-size: 16px; color: var(--color-ink); background: #fffdf9; font-family: var(--font-body); font-variant-numeric: tabular-nums; font-weight: 600; }
 .form input[inputmode] { text-align: right; }
 .form input[inputmode]:focus, .form select:focus { outline: 2px solid var(--color-primary); border-color: transparent; }
 
@@ -266,7 +266,7 @@ h2 .ico { margin-right: 8px; }
 }
 .form label[data-unit] input[inputmode] { padding-right: 44px; }
 .form label.form-field-primary::after { top: 50%; right: 10px; bottom: auto; transform: translateY(-50%); }
-.form label.form-field-primary input[inputmode] { width: 100%; min-width: 0; padding-top: 9px; padding-bottom: 9px; background: #fffdfa; border-color: #e8dece; font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.form label.form-field-primary input[inputmode] { width: 100%; min-width: 0; padding-top: 9px; padding-bottom: 9px; background: #fffdfa; border-color: #e8dece; font-family: var(--font-body); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .form > details {
   margin-top: 12px;
@@ -276,6 +276,45 @@ h2 .ico { margin-right: 8px; }
   background: #fffdfa;
 }
 .form > details > summary { list-style-position: outside; }
+
+/* 投資をしていない人の入力負担を増やさないよう、運用額と積立額を同じ行形式で畳む。 */
+.form > details.investing-monthly {
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--color-line);
+  border-radius: 0;
+  background: transparent;
+}
+.investing-monthly > summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 8px 26px 8px 0;
+  list-style: none;
+  color: var(--color-ink);
+}
+.investing-monthly > summary::-webkit-details-marker { display: none; }
+.investing-monthly > summary::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-muted);
+  border-bottom: 1.5px solid var(--color-muted);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+.investing-monthly[open] > summary::after { transform: translateY(-30%) rotate(225deg); }
+.investing-monthly > summary .form-label-text { font-size: 13px; }
+.investing-summary-note { color: var(--color-muted); font-size: 11px; white-space: nowrap; }
+.investing-monthly-body { margin: 0 0 10px; padding: 10px 12px 12px; border: 1px solid var(--color-line); border-radius: 11px; background: #fffdfa; }
+.investing-monthly-body > label:first-child { margin-top: 0; }
 
 @media (min-width: 1200px) {
   /* PCの操作盤は一覧性を優先。数値入力は残し、補助スライダーだけ畳む。 */
@@ -617,7 +656,7 @@ footer p { margin: 4px 0; font-size: var(--text-xs); color: var(--color-muted); 
 .child-row input[type='number']::-webkit-inner-spin-button,
 .child-row input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .event-row input[type='number'],
-.child-row input[type='number'] { -moz-appearance: textfield; appearance: textfield; text-align: right; }
+.child-row input[type='number'] { -moz-appearance: textfield; appearance: textfield; text-align: right; font-family: var(--font-body); font-variant-numeric: tabular-nums; font-weight: 600; }
 .event-del { border: none; background: none; color: var(--color-muted); font-size: 16px; cursor: pointer; padding: 2px; line-height: 1; }
 .event-del:hover { color: var(--color-warn); }
 .add-event { margin-top: 6px; border: 1px dashed var(--color-primary); background: none; color: var(--color-primary-deep); border-radius: 10px; padding: 8px 12px; font-size: 13px; cursor: pointer; font-family: inherit; }

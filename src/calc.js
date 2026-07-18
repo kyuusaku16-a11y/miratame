@@ -26,6 +26,46 @@ export function educationCostAt(childAge, course) {
   return 0;
 }
 
+// 資産推移グラフに重ねる年齢別の年間支出。
+// 本体計算と同じく、完済後のローン減少・退職後比率・教育費差分・一時支出を反映する。
+export function projectExpenses(params, ages = null) {
+  const {
+    currentAge, annualExpense, retireAge, retiredExpenseRatio, endAge,
+    events = [], children = [], loanMonthly = 0, loanEndAge = 0,
+  } = params;
+  const targetAges = ages ?? Array.from(
+    { length: Math.max(0, endAge - currentAge + 1) },
+    (_, index) => currentAge + index,
+  );
+  const loanAnnual = Math.min(Math.max(0, loanMonthly) * 12, annualExpense);
+  const retiredExpense = (annualExpense - loanAnnual) * retiredExpenseRatio;
+  const currentEduCosts = children.map((child) => educationCostAt(child.age, child.course));
+  const eventCost = new Map();
+  for (const event of events) {
+    if (event.age > currentAge && event.age <= endAge) {
+      eventCost.set(event.age, (eventCost.get(event.age) || 0) + event.amount);
+    }
+  }
+
+  return targetAges.map((age) => {
+    const loanThisYear = loanAnnual > 0 && age < loanEndAge ? loanAnnual : 0;
+    const recurring = age < retireAge
+      ? annualExpense - loanAnnual + loanThisYear
+      : retiredExpense + loanThisYear;
+    const educationDelta = children.reduce((sum, child, index) => (
+      sum + educationCostAt(child.age + (age - currentAge), child.course) - currentEduCosts[index]
+    ), 0);
+    const oneTime = eventCost.get(age) || 0;
+    return {
+      age,
+      expenses: Math.max(0, Math.round(recurring + educationDelta + oneTime)),
+      recurring: Math.max(0, Math.round(recurring)),
+      educationDelta: Math.round(educationDelta),
+      oneTime: Math.round(oneTime),
+    };
+  });
+}
+
 // 2バケツ（現金/投資）＋収入モデルで currentAge〜endAge を1年刻みで計算する純粋関数。
 // params: { currentAge, totalAsset, investedAsset, monthlyInvest, annualIncome,
 //           annualExpense, retireAge, pensionAnnual, pensionStartAge,

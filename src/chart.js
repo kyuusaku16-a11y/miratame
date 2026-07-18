@@ -4,7 +4,7 @@
 
 /* global Chart */
 
-import { educationCostAt } from './calc.js';
+import { educationCostAt, projectExpenses } from './calc.js';
 
 const CHART_COLORS = {
   text: '#6b514a',
@@ -15,6 +15,7 @@ const CHART_COLORS = {
   retirement: '#e9a66f',
   goal: '#f3cf7a',
   event: '#9fc8b3',
+  expense: '#ef8b22',
 };
 
 // 目標達成バッジの喜ぶ2人（読み込み完了後の再描画から表示される）
@@ -44,7 +45,7 @@ function fmtYen(yen) {
  * @param {{ targetAmount: number, retireAge: number, expectedReturn: number, events?: Array<{age: number, label?: string, amount: number}> }} params
  * @param {Chart|null|undefined} existingChart — previous Chart instance to destroy first
  * @param {{ label: string, series: { age: number, assets: number }[] }|null} [compare] — 保存プラン比較線
- * @param {{ rate: number, series: { age: number, assets: number }[] }|null} [weak] — 弱気ケース（帯の下端）
+ * @param {{ series: { age: number, assets: number }[] }|null} [weak] — 低めケース（想定幅の下端）
  * @returns {Chart}
  */
 export function renderChart(canvas, mainSeries, params, existingChart, compare = null, weak = null) {
@@ -52,6 +53,7 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
 
   const labels  = mainSeries.map((p) => p.age);
   const mainData = mainSeries.map((p) => p.assets);
+  const expenseData = projectExpenses(params, labels).map((p) => p.expenses);
 
   // 比較線は年齢で対応付ける（保存時と年齢設定が違ってもズレないように）
   const compareByAge = compare ? new Map(compare.series.map((p) => [p.age, p.assets])) : null;
@@ -127,8 +129,11 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       datasets: [
         // 1. Main line — thick, segment-colored green (gain) / red (loss)
         {
-          label:                '今のプラン',
+          label:                '資産残高',
           data:                 mainData,
+          yAxisID:              'yAssets',
+          order:                2,
+          borderColor:          CHART_COLORS.gain,
           borderWidth:          3.5,
           // 線の下をふんわり塗って「資産の山」に見せる（ベリー色→透明）
           fill:                 'origin',
@@ -155,10 +160,28 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
               ctx.p1.parsed.y >= ctx.p0.parsed.y ? CHART_COLORS.gain : CHART_COLORS.loss,
           },
         },
-        // 2. Target dashed line
+        // 2. 年間支出 — 資産と桁が違うため右軸へ分ける
+        {
+          label:           '年間支出',
+          data:            expenseData,
+          yAxisID:         'yExpense',
+          order:           0,
+          borderColor:     CHART_COLORS.expense,
+          backgroundColor: CHART_COLORS.expense,
+          borderWidth:     3,
+          borderDash:      [5, 4],
+          pointRadius:     0,
+          pointHoverRadius: 5,
+          pointHitRadius:  12,
+          fill:            false,
+          tension:         0,
+        },
+        // 3. Target dashed line
         {
           label:       `目標 ${fmtYen(params.targetAmount)}円`,
           data:        targetData,
+          yAxisID:     'yAssets',
+          order:       1,
           borderColor: CHART_COLORS.target,
           borderWidth: 1.5,
           borderDash:  [8, 4],
@@ -166,16 +189,17 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
           fill:        false,
           tension:     0,
         },
-        // 3. 弱気ケースの線＋本線との間の「不確実性の帯」（あるときだけ）
-        //    未来は1本の線ではなく幅で見せる。塗りは fill:0（本線との間）
+        // 4. 低めケースとの間の「想定の幅」（あるときだけ）。
+        //    境界線と凡例は出さず、未来を1本線で断定しないための薄い帯だけ残す。
         ...(weak
           ? [
               {
-                label:           `低めの想定 ${weak.rate}%`,
+                label:           '想定の幅',
                 data:            weak.series.map((p) => p.assets),
-                borderColor:     'rgba(107, 81, 74, 0.4)',
-                borderWidth:     1.5,
-                borderDash:      [6, 4],
+                yAxisID:         'yAssets',
+                order:           3,
+                borderColor:     'transparent',
+                borderWidth:     0,
                 pointRadius:     0,
                 fill:            0,
                 backgroundColor: 'rgba(150, 130, 120, 0.12)',
@@ -183,12 +207,14 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
               },
             ]
           : []),
-        // 4. 保存プランの比較線（あるときだけ）
+        // 5. 保存プランの比較線（あるときだけ）
         ...(compareData
           ? [
               {
                 label:       compare.label,
                 data:        compareData,
+                yAxisID:     'yAssets',
+                order:       0,
                 borderColor: 'rgba(116, 91, 132, 0.72)',
                 borderWidth: 2,
                 borderDash:  [8, 5],
@@ -209,19 +235,27 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
       plugins: {
         legend: {
           position: 'bottom',
-          labels:   { boxWidth: 16, color: CHART_COLORS.text, font: { size: 12 } },
+          labels: {
+            boxWidth: 16,
+            color: CHART_COLORS.text,
+            font: { size: 12 },
+            filter: (item) => item.text !== '想定の幅',
+            sort: (a, b) => a.datasetIndex - b.datasetIndex,
+          },
         },
         tooltip: {
-          // 年齢と資産を主役に、支出の内訳だけを添える（目標・利回りは出さない）
-          displayColors: false,
-          filter: (item) => item.datasetIndex === 0,
+          // 同じ年齢の資産残高と年間支出を、色付きで別々の数値として見せる。
+          // 目標・弱気ケース・比較線はツールチップへ混ぜず、2つの主役を読みやすく保つ。
+          displayColors: true,
+          filter: (item) => item.datasetIndex === 0 || item.datasetIndex === 1,
           titleFont: { size: 14, weight: 'bold' },
           bodyFont: { size: 12 },
           callbacks: {
-            title: (items) =>
-              items.length ? [`${items[0].label}歳`, `資産 ${fmtYen(items[0].parsed.y)}円`] : '',
-            label: (ctx) => {
-              const age = Number(ctx.label);
+            title: (items) => items.length ? `${items[0].label}歳` : '',
+            label: (ctx) => `${ctx.dataset.label}　${fmtYen(ctx.parsed.y)}円`,
+            afterBody: (items) => {
+              if (!items.length) return [];
+              const age = Number(items[0].label);
               const startAge = mainSeries[0].age;
               const notes = (params.events ?? [])
                 .filter((e) => e.age === age && e.age > startAge)
@@ -249,11 +283,25 @@ export function renderChart(canvas, mainSeries, params, existingChart, compare =
           ticks:  { maxTicksLimit: 12, color: CHART_COLORS.text },
           grid:   { color: CHART_COLORS.grid },
         },
-        y: {
+        yAssets: {
+          position: 'left',
           title: { display: !matchMedia('(max-width: 940px)').matches, text: '資産額', color: CHART_COLORS.text },
           grid:  { color: CHART_COLORS.grid },
           ticks: {
             color: CHART_COLORS.text,
+            callback: (value) => fmtYen(value),
+          },
+        },
+        yExpense: {
+          position: 'right',
+          beginAtZero: true,
+          // 支出が毎年一定でも線が上端に張り付かないよう、右軸だけ上に余白を持たせる。
+          grace: '15%',
+          title: { display: !matchMedia('(max-width: 940px)').matches, text: '年間支出', color: CHART_COLORS.expense },
+          grid: { drawOnChartArea: false },
+          ticks: {
+            maxTicksLimit: 6,
+            color: CHART_COLORS.expense,
             callback: (value) => fmtYen(value),
           },
         },

@@ -211,16 +211,15 @@
                 </div>
                 <p id="goalTabHint" class="goal-tab-hint" hidden>目標金額を設定すると表示できます</p>
                 <div id="chartPanel" role="tabpanel" aria-labelledby="modeLife">
-                  <p id="chartDescription" class="chart-description">今のペースで、資産が将来どう動くかを確認できます。</p>
+                  <p id="chartDescription" class="chart-description">今のペースで、資産と年間支出が将来どう動くかを確認できます。線にカーソルを合わせるかタップすると、年齢ごとの数字が見られます。</p>
                   <div id="goalResult" class="goal-result" hidden aria-live="polite">
                     <strong id="goalResultAmount"></strong>
                     <span id="goalResultStatus"></span>
                     <small id="goalResultConditions"></small>
                   </div>
-                  <div class="chart-box"><canvas id="chart"></canvas></div>
+                  <div class="chart-box"><canvas id="chart" role="img" aria-label="年齢ごとの資産残高と年間支出の推移グラフ" aria-describedby="chartDescription"></canvas></div>
                 </div>
               </div>
-              <button id="defaultsNote" class="defaults-note" type="button" hidden>年金は仮の値（年180万円）で計算中（タップで変更）</button>
               <div class="scenario-row">
                 <button id="saveScenarioBtn" type="button" class="scenario-save"><svg class="ico" aria-hidden="true"><use href="#i-bookmark"/></svg>このプランを保存</button>
                 <div id="scenarioList" class="scenario-list"></div>
@@ -366,15 +365,19 @@
         <label class="form-field-primary" data-unit="万円"><span class="form-label-text"><svg class="ico" aria-hidden="true"><use href="#i-cart"/></svg>年間支出・現役</span><input type="text" inputmode="numeric" id="annualExpense" /></label>
         <input type="range" id="annualExpenseSlider" min="1000000" max="8000000" step="100000" aria-label="年間支出" />
 
-        <!-- 投資項目は「している人だけ」の折りたたみ。収入・支出を見てから積立を考える順番に合わせる。
-             初回のベール中は閉じたまま（説明の「年齢・資産・収入・支出を入れるだけ」と画面を一致させる） -->
-        <details id="investing">
-          <summary>投資のこと<span class="summary-note">積立していない人は、このままでOK</span></summary>
-          <label data-unit="万円">現在の資産のうち、投資に回している額（万円）<input type="text" inputmode="numeric" id="investedAsset" /></label>
-          <p class="field-note" id="assetClampNote" hidden></p>
-          <label data-unit="万円">毎月の投資額（万円）<input type="text" inputmode="decimal" id="monthlyInvest" /></label>
-          <input type="range" id="monthlyInvestSlider" min="0" max="300000" step="5000" aria-label="毎月の投資額" />
-          <p class="field-note">※現金から投資へ移す金額です（収入とは別に増えるお金ではありません）</p>
+        <!-- 投資をしている人だけ開く任意項目。現在の運用額と毎月の積立額をひとまとめにする。 -->
+        <details id="investing" class="investing-monthly">
+          <summary>
+            <span class="form-label-text"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>運用・積立の設定</span>
+            <span class="investing-summary-note">投資している人だけ</span>
+          </summary>
+          <div class="investing-monthly-body">
+            <label data-unit="万円">投資に回している資産<input type="text" inputmode="numeric" id="investedAsset" /></label>
+            <p class="field-note" id="assetClampNote" hidden></p>
+            <label data-unit="万円">毎月の積立額<input type="text" inputmode="decimal" id="monthlyInvest" /></label>
+            <input type="range" id="monthlyInvestSlider" min="0" max="300000" step="5000" aria-label="毎月の投資額" />
+            <p class="field-note">※現金から投資へ移す金額です（収入とは別に増えるお金ではありません）</p>
+          </div>
         </details>
 
         <label class="form-field-primary" data-unit="万円"><span class="form-label-text"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg>目標金額</span><input type="text" inputmode="numeric" id="targetAmount" /></label>

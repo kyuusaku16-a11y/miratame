@@ -1492,7 +1492,7 @@ const RESULT_ONLY_HASHES = new Set(['#outlook', '#track', '#schedule', '#comment
 // 結果後のスマホでは入力全体を畳む。PCではdetailsを常に開いて従来の操作盤を保つ。
 function syncFormLayout() {
   const dash = document.querySelector('.dash');
-  if (veiled) $('nextPreview').after(dash);
+  if (veiled) document.querySelector('section.results').after(dash);
   else document.querySelector('.results-more').after(dash);
   $('formSettings').open = veiled || !formCollapseMedia.matches;
 }

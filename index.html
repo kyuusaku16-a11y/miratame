@@ -55,7 +55,8 @@
         <img class="tb-logo" src="assets/logo-miratame-tagline.png" alt="ミラため 資産寿命シミュレーター" width="1000" height="500" />
       </a>
       <nav class="tb-nav" aria-label="メニュー">
-        <button id="jumpFormBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>入力</button>
+        <a class="tb-mobile-optional tb-about-link" href="about.html">ミラためとは</a>
+        <button id="jumpFormBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg><span class="jump-default">入力</span><span class="jump-initial">無料ではじめる</span></button>
         <a id="navOutlook" class="tb-mobile-optional" href="#outlook" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>見通し</a>
         <a id="navTrack" class="tb-mobile-optional" href="#track" hidden><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg>みなおし</a>
         <a class="tb-mobile-optional" href="#reading"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg>よみもの</a>
@@ -143,33 +144,44 @@
         <div class="cockpit chart-wrap is-veiled" id="resultsCockpit">
           <!-- 初回訪問だけのベール: 結果を「自分でめくる」ごほうびにする -->
           <div class="chart-veil" id="chartVeil" hidden>
-            <div class="veil-copy">
-              <p class="veil-kicker"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>資産寿命シミュレーター</p>
-              <p class="veil-title">未来のために、<br /><em>“いまできること”</em>を見える化。</p>
-              <p class="veil-sub">年齢・資産・収入・支出を入れるだけ。教育費・住宅・老後まで含めて、いまのペースでお金が何歳まで持つかをやさしく見える化します。</p>
-              <button id="veilJumpBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>無料でシミュレーションを始める</button>
-              <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>この数字で結果を見る</button>
-              <button id="veilSampleBtn" type="button" class="veil-sample">サンプル結果を見る</button>
+            <div class="veil-main-panel">
+              <div class="veil-copy">
+                <p class="veil-kicker"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>資産寿命シミュレーター</p>
+                <p class="veil-title">未来のために、<br /><em>“いまできること”</em>を見える化。</p>
+                <p class="veil-sub">年齢・資産・収入・支出を入れるだけ。いまのペースでお金が何歳まで持つかを、約30秒でやさしく見通せます。</p>
+                <div class="veil-actions">
+                  <button id="veilJumpBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>無料でシミュレーションを始める</button>
+                  <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>この数字で結果を見る</button>
+                  <button id="veilSampleBtn" type="button" class="veil-sample">サンプル結果を見る</button>
+                </div>
+                <p class="veil-note">※シミュレーションは入力内容にもとづく概算です。</p>
+              </div>
+              <section class="panel next-preview" id="nextPreview" aria-labelledby="nextPreviewTitle">
+                <h2 id="nextPreviewTitle"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>ミラためでできること</h2>
+                <div class="next-preview-features">
+                  <article><div class="np-head"><span class="np-icon np-chart"><svg class="ico" aria-hidden="true"><use href="#i-income"/></svg></span><strong>未来の資産寿命を<br />シミュレーション</strong></div><p>資産・収入・支出から、将来のお金の流れをグラフで確認できます。</p></article>
+                  <article><div class="np-head"><span class="np-icon np-target"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg></span><strong>目標に合わせて<br />プランを比較</strong></div><p>積立や支出を変えたときの未来を、その場で見比べられます。</p></article>
+                  <article><div class="np-head"><span class="np-icon np-book"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg></span><strong>お金の知識が<br />自然と身につく</strong></div><p>初心者向けのやさしい解説で、判断の土台を育てられます。</p></article>
+                </div>
+              </section>
             </div>
             <div class="veil-visual" aria-hidden="true">
+              <img class="veil-grass" src="assets/hero-grass-watercolor-v1.webp" alt="" width="1774" height="887" />
+              <img class="veil-decor veil-decor-leaves" src="assets/decor-leaves-floating-v1.webp" alt="" width="320" height="320" />
+              <img class="veil-decor veil-decor-sprout" src="assets/decor-sprout-two-leaf-v1.webp" alt="" width="256" height="256" />
               <span class="veil-spark veil-spark-one">✦</span>
               <span class="veil-spark veil-spark-two">✧</span>
-              <img class="veil-piyo" src="assets/piyo-memo.png" alt="" />
-              <div class="veil-result-preview">
-                <div class="vrp-head"><img src="assets/logo-miratame.png" alt="" /><span>表示例</span></div>
-                <div class="vrp-outlook">
-                  <span>資産寿命（推定）</span>
-                  <strong>83<small>歳まで</small></strong>
-                  <p>いまのペースを続けた場合の見通しです</p>
-                </div>
-                <div class="vrp-chart">
-                  <span>資産推移グラフ</span>
-                  <svg viewBox="0 0 260 96" aria-hidden="true"><defs><linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fbe68" stop-opacity=".34"/><stop offset="1" stop-color="#9fbe68" stop-opacity=".04"/></linearGradient></defs><path d="M4 82 C 42 78, 72 55, 112 42 C 148 30, 192 42, 256 74 L256 92 L4 92 Z" fill="url(#previewFill)"/><path d="M4 82 C 42 78, 72 55, 112 42 C 148 30, 192 42, 256 74" fill="none" stroke="#6f9831" stroke-width="3" stroke-linecap="round"/><path d="M4 84 C 70 82, 145 80, 256 88" fill="none" stroke="#ef8b22" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
-                <div class="vrp-goal"><span>目標への現在地</span><strong>72%</strong><div><i></i></div></div>
+              <div class="veil-message-ring">
+                <img src="assets/decor-leafy-ring-v1.webp" alt="" width="512" height="512" />
+                <p><span>将来のお金の</span><span>不安を、安心に。</span></p>
               </div>
+              <img class="veil-phone" src="assets/hero-phone.webp" alt="" width="720" height="1417" />
+              <img class="veil-piyo" src="assets/hero-piyo-guide.webp" alt="" width="620" height="785" />
             </div>
-            <div class="veil-trust" aria-hidden="false"><span>登録不要</span><span>データは端末内のみ</span><span>金融商品の勧誘なし</span><span>30秒で確認</span></div>
+            <div class="veil-closing">
+              <strong>今日の選択が、未来の安心につながる。</strong>
+              <span>ミラためで、あなただけの未来設計をはじめましょう。</span>
+            </div>
           </div>
           <div class="outlook-result" id="outlookResult" hidden>
             <div class="dashboard-main-column">
@@ -285,17 +297,6 @@
 
         <div id="reaction" class="reaction" hidden aria-live="polite"><img class="reaction-img" id="reactionImg" src="assets/bird-pink.png" alt="" aria-hidden="true" loading="lazy" /><span id="reactionText"></span></div>
 
-      </section>
-
-      <!-- 入力前に「分かった後にできること」を見せる: 結果の先に比較があると伝えて入力の腰を上げてもらう -->
-      <section class="panel next-preview" id="nextPreview" aria-labelledby="nextPreviewTitle">
-        <h2 id="nextPreviewTitle"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>ミラためでできること</h2>
-        <p class="next-preview-lede">未来を知るだけでなく、いまできることまで一緒に見つけます。</p>
-        <div class="next-preview-features">
-          <article><span class="np-icon np-chart"><svg class="ico" aria-hidden="true"><use href="#i-income"/></svg></span><div><strong>資産寿命を見える化</strong><p>資産・収入・支出から、将来のお金の流れをグラフで確認できます。</p></div></article>
-          <article><span class="np-icon np-target"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg></span><div><strong>条件を変えて比較</strong><p>積立や支出を少し変えたとき、未来がどう動くかをその場で見比べられます。</p></div></article>
-          <article><span class="np-icon np-book"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg></span><div><strong>お金の知識が身につく</strong><p>初心者にも読みやすい解説とよみもので、判断の土台をやさしく整えます。</p></div></article>
-        </div>
       </section>
 
       <!-- グラフより下に続く詳しい見通し -->

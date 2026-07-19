@@ -1183,8 +1183,7 @@ function init() {
   });
   $('jumpFormBtn').addEventListener('click', () => {
     trackEvent('jump-form');
-    $('formSettings').open = true;
-    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
+    showInitialForm();
   });
   for (const link of document.querySelectorAll('.tb-nav a[href="#track"], .tb-nav a[href="#reading"]')) {
     link.addEventListener('click', () => {
@@ -1200,8 +1199,7 @@ function init() {
   if (veiled) $('chartVeil').hidden = false;
   $('veilJumpBtn').addEventListener('click', () => {
     trackEvent('hero-main-cta');
-    $('formSettings').open = true;
-    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth' });
+    showInitialForm();
   });
   $('veilRevealBtn').addEventListener('click', () => {
     trackEvent('hero-main-cta');
@@ -1488,6 +1486,7 @@ let veiled = false;
 let canPersist = true;
 const veilEdited = new Set();
 const formCollapseMedia = matchMedia('(max-width: 940px)');
+const RESULT_ONLY_HASHES = new Set(['#outlook', '#track', '#schedule', '#comments', '#diagnosis', '#nextSteps']);
 
 // HTMLソースは結果後の読み順を優先する。初回ベール中だけ入力を比較予告の直後へ戻し、
 // 結果後のスマホでは入力全体を畳む。PCではdetailsを常に開いて従来の操作盤を保つ。
@@ -1499,11 +1498,28 @@ function syncFormLayout() {
 }
 
 function syncResultVisibility() {
+  document.body.classList.toggle('is-initial', veiled);
+  if (!veiled) document.body.classList.remove('is-form-started');
+  if (veiled && RESULT_ONLY_HASHES.has(location.hash)) {
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
+  }
   $('outlookResult').hidden = veiled;
   $('resultsCockpit').classList.toggle('is-veiled', veiled);
   $('navOutlook').hidden = veiled;
   $('navTrack').hidden = veiled;
+  $('formLede').textContent = veiled
+    ? 'まずは4つの数字を入力してください。結果を見たあとは、変更がすぐグラフに反映されます。'
+    : '数字を変えると、見通しとグラフにすぐ反映されます。';
   syncFormLayout();
+}
+
+function showInitialForm() {
+  if (veiled) document.body.classList.add('is-form-started');
+  $('formSettings').open = true;
+  requestAnimationFrame(() => {
+    document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 // veil.js の遷移結果を反映し、必要なら mv-revealed を書く
@@ -1974,6 +1990,7 @@ function blockWhileVeiled(message, { scrollToForm = false } = {}) {
   jumpBtn.classList.remove('pulse-once');
   requestAnimationFrame(() => jumpBtn.classList.add('pulse-once'));
   if (scrollToForm) {
+    showInitialForm();
     setTimeout(() => {
       document.querySelector('.panel.form').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 900);

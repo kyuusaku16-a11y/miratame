@@ -144,24 +144,30 @@
           <!-- 初回訪問だけのベール: 結果を「自分でめくる」ごほうびにする -->
           <div class="chart-veil" id="chartVeil" hidden>
             <div class="veil-copy">
-              <p class="veil-title">いまのお金で、<br />何歳まで<span class="nowrap">暮らせる？</span></p>
-              <p class="veil-sub">資産寿命が、30秒でわかる。今の資産・収入・支出から、教育費・住宅・老後まで含めて試算します。</p>
+              <p class="veil-kicker"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>資産寿命シミュレーター</p>
+              <p class="veil-title">未来のために、<br /><em>“いまできること”</em>を見える化。</p>
+              <p class="veil-sub">年齢・資産・収入・支出を入れるだけ。教育費・住宅・老後まで含めて、いまのペースでお金が何歳まで持つかをやさしく見える化します。</p>
               <button id="veilJumpBtn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pencil"/></svg>無料でシミュレーションを始める</button>
               <button id="veilRevealBtn" type="button" hidden><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>この数字で結果を見る</button>
               <button id="veilSampleBtn" type="button" class="veil-sample">サンプル結果を見る</button>
             </div>
-            <img class="veil-piyo" src="assets/piyo-memo.png" alt="" aria-hidden="true" />
-            <div class="veil-phone" aria-hidden="true">
-              <div class="phone">
-                <div class="phone-screen">
-                  <div class="pm-head"><img src="assets/logo-miratame.png" alt="" /></div>
-                  <div class="pm-card"><span class="pm-label">資産寿命</span><span class="pm-value">83<small>歳まで</small></span></div>
-                  <div class="pm-card pm-chart"><span class="pm-label">資産推移グラフ</span><svg viewBox="0 0 200 74" aria-hidden="true"><path d="M0 64 C 40 60, 70 40, 105 30 C 135 22, 165 34, 200 56 L200 74 L0 74 Z" fill="#86a84f" opacity="0.22" /><path d="M0 64 C 40 60, 70 40, 105 30 C 135 22, 165 34, 200 56" fill="none" stroke="#567536" stroke-width="2.4" stroke-linecap="round" /><line x1="0" y1="70" x2="200" y2="70" stroke="#e9e1d5" stroke-width="1" /></svg></div>
-                  <div class="pm-card"><span class="pm-label">目標達成率 72%</span><div class="pm-goal-bar"><i></i></div></div>
-                  <div class="pm-card pm-range"><span class="pm-label">資産寿命の見通し</span><strong><span>低め 78歳</span><i>〜</i><span>中間 83歳</span></strong></div>
+            <div class="veil-visual" aria-hidden="true">
+              <span class="veil-spark veil-spark-one">✦</span>
+              <span class="veil-spark veil-spark-two">✧</span>
+              <img class="veil-piyo" src="assets/piyo-memo.png" alt="" />
+              <div class="veil-result-preview">
+                <div class="vrp-head"><img src="assets/logo-miratame.png" alt="" /><span>表示例</span></div>
+                <div class="vrp-outlook">
+                  <span>資産寿命（推定）</span>
+                  <strong>83<small>歳まで</small></strong>
+                  <p>いまのペースを続けた場合の見通しです</p>
                 </div>
+                <div class="vrp-chart">
+                  <span>資産推移グラフ</span>
+                  <svg viewBox="0 0 260 96" aria-hidden="true"><defs><linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fbe68" stop-opacity=".34"/><stop offset="1" stop-color="#9fbe68" stop-opacity=".04"/></linearGradient></defs><path d="M4 82 C 42 78, 72 55, 112 42 C 148 30, 192 42, 256 74 L256 92 L4 92 Z" fill="url(#previewFill)"/><path d="M4 82 C 42 78, 72 55, 112 42 C 148 30, 192 42, 256 74" fill="none" stroke="#6f9831" stroke-width="3" stroke-linecap="round"/><path d="M4 84 C 70 82, 145 80, 256 88" fill="none" stroke="#ef8b22" stroke-width="2" stroke-linecap="round"/></svg>
+                </div>
+                <div class="vrp-goal"><span>目標への現在地</span><strong>72%</strong><div><i></i></div></div>
               </div>
-              <p class="mock-note">表示例です。実際の結果は入力内容により変わります。</p>
             </div>
             <div class="veil-trust" aria-hidden="false"><span>登録不要</span><span>データは端末内のみ</span><span>金融商品の勧誘なし</span><span>30秒で確認</span></div>
           </div>
@@ -283,15 +289,13 @@
 
       <!-- 入力前に「分かった後にできること」を見せる: 結果の先に比較があると伝えて入力の腰を上げてもらう -->
       <section class="panel next-preview" id="nextPreview" aria-labelledby="nextPreviewTitle">
-        <h2 id="nextPreviewTitle">見るだけで終わりません</h2>
-        <p class="next-preview-lede">条件を少し変えたとき、未来がどれくらい変わるか比較できます。</p>
-        <div class="next-preview-example" aria-label="比較の表示例">
-          <span>今のまま<strong>資産寿命：約74歳</strong></span>
-          <span>生活費を月1万円見直した場合<strong>資産寿命：約80歳</strong></span>
-          <strong class="next-preview-delta">＋6年</strong>
+        <h2 id="nextPreviewTitle"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>ミラためでできること</h2>
+        <p class="next-preview-lede">未来を知るだけでなく、いまできることまで一緒に見つけます。</p>
+        <div class="next-preview-features">
+          <article><span class="np-icon np-chart"><svg class="ico" aria-hidden="true"><use href="#i-income"/></svg></span><div><strong>資産寿命を見える化</strong><p>資産・収入・支出から、将来のお金の流れをグラフで確認できます。</p></div></article>
+          <article><span class="np-icon np-target"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg></span><div><strong>条件を変えて比較</strong><p>積立や支出を少し変えたとき、未来がどう動くかをその場で見比べられます。</p></div></article>
+          <article><span class="np-icon np-book"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg></span><div><strong>お金の知識が身につく</strong><p>初心者にも読みやすい解説とよみもので、判断の土台をやさしく整えます。</p></div></article>
         </div>
-        <p class="next-preview-note">入力後は、あなた自身の数字で比較できます。</p>
-        <p class="next-preview-caption">表示例です。実際の結果は入力内容によって変わります。</p>
       </section>
 
       <!-- グラフより下に続く詳しい見通し -->
@@ -343,7 +347,7 @@
         <summary><span class="form-label-text">🔢 数字を変える</span></summary>
       <section class="panel form">
         <h2><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg>シミュレーション設定</h2>
-        <p class="form-lede">数字を変えると、見通しとグラフにすぐ反映されます。</p>
+        <p class="form-lede" id="formLede">まずは4つの数字を入力してください。結果を見たあとは、変更がすぐグラフに反映されます。</p>
 
         <label class="form-field-primary" data-unit="歳"><span class="form-label-text"><svg class="ico" aria-hidden="true"><use href="#i-person"/></svg>現在の年齢</span><input type="text" inputmode="numeric" id="currentAge" /></label>
 
@@ -529,7 +533,7 @@
         <p>ミラためは簡易シミュレーションです。投資助言ではなく、将来の成果を保証するものでもありません。</p>
         <p>入力データはこの端末のブラウザ内にのみ保存され、入力内容が外部へ送信されることはありません。</p>
         <p>アクセス数の把握のため、Cookieを使わない匿名のアクセス解析（GoatCounter）を利用しています。</p>
-        <p>サイト改善のため、診断結果のタイプ分布と、ボタンが使われた回数だけを匿名で集計しています。入力した金額や年齢が送信されることはありません。</p>
+        <p>サイト改善のため、診断結果のタイプ分布と、ボタンや機能が使われた回数だけを匿名で集計しています。入力した金額・年齢や、シミュレーション結果の数値が送信されることはありません。</p>
       </details>
       <p>
         <a class="footer-link" href="guide.html">使い方と計算の仕組み・よくある質問</a>／<a class="footer-link" href="types.html">お金のタイプ診断 全16タイプ図鑑</a>／<a class="footer-link" href="columns/">お金のよみもの一覧</a>／<a class="footer-link" href="about.html">ミラためについて</a>

@@ -182,6 +182,7 @@ body.is-initial:not(.is-form-started) #jumpFormBtn:hover { background: var(--col
   .tb-nav a,
   .tb-nav button { padding: 10px 12px; }
   .tb-cta { padding: 9px 16px; }
+  body.is-initial:not(.is-form-started) #jumpFormBtn { order: 99; }
 }
 @media (max-width: 700px) {
   .topbar { padding: 8px 10px; gap: 6px; }

@@ -1498,6 +1498,20 @@ footer .footer-link:hover { text-decoration: underline; }
   .lifetime-bar .lb-hint { display: none; }
 }
 
+/* 横持ちスマホ（背の低い画面）: 画面の高さをコンテンツに譲る。
+   ヘッダーは追従をやめてスクロールで消え、下部ドックは一段低く畳む */
+@media (max-height: 480px) {
+  .topbar { position: static; }
+  .lifetime-dock { bottom: 8px; }
+  .lifetime-bar { padding: 3px 12px; gap: 6px; }
+  .lifetime-bar img { width: 24px; height: 24px; }
+  .lifetime-bar .lb-label { font-size: 10px; }
+  .lifetime-bar .lb-hint { font-size: 9px; }
+  .lifetime-bar .lb-value { font-size: 12px; }
+  .lifetime-edit { padding: 5px 12px; font-size: 11px; }
+  body { padding-bottom: 46px; }
+}
+
 /* 診断ボタン（ヘッダーの題名横が定位置） */
 .header-diagnose {
   border: none;
